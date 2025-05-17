@@ -12,16 +12,19 @@ const ReservePage: React.FC = () => {
   const navigate = useNavigate();
   const movie = movies.find((m) => m.id.toString() === id);
 
+  // ✅ Hook은 항상 최상단에서 호출해야 함
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTheater, setSelectedTheater] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
+  if (!movie) {
+    return <Wrapper><h2>영화를 찾을 수 없습니다.</h2></Wrapper>;
+  }
+
   const handleSeatToggle = (seat: string) => {
     setSelectedSeats((prev) =>
-      prev.includes(seat)
-        ? prev.filter((s) => s !== seat)
-        : [...prev, seat]
+      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
     );
   };
 
@@ -31,15 +34,21 @@ const ReservePage: React.FC = () => {
       return;
     }
 
-    alert('예매가 완료되었습니다!');
-    navigate('/');
+    navigate('/payment', {
+      state: {
+        movieTitle: movie.title,
+        date: selectedDate,
+        time: selectedTime,
+        theater: selectedTheater,
+        seats: selectedSeats,
+        totalPrice: selectedSeats.length * 11000,
+      }
+    });
   };
-
-  if (!movie) return <Wrapper><h2>영화를 찾을 수 없습니다.</h2></Wrapper>;
 
   return (
     <Wrapper>
-      <Title>{movie.title} 예매</Title>
+      <h2>{movie.title} 예매</h2>
 
       <Section>
         <ReserveMovieInfo
@@ -51,12 +60,10 @@ const ReservePage: React.FC = () => {
       </Section>
 
       <Section>
-        <SubTitle>1. 날짜 선택</SubTitle>
         <ReserveDate selectedDate={selectedDate} onChange={setSelectedDate} />
       </Section>
 
       <Section>
-        <SubTitle>2. 극장 / 시간 선택</SubTitle>
         <ReserveTime
           selectedTheater={selectedTheater}
           selectedTime={selectedTime}
@@ -66,7 +73,6 @@ const ReservePage: React.FC = () => {
       </Section>
 
       <Section>
-        <SubTitle>3. 좌석 선택</SubTitle>
         <ReserveSeat selectedSeats={selectedSeats} onSelectSeat={handleSeatToggle} />
       </Section>
 
