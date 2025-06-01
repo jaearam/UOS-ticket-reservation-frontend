@@ -13,6 +13,7 @@ import TheaterDetailPage from './pages/TheaterDetailPage';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import EditProfilePage from './pages/EditProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
 
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
           <Route path="/theaters/:id" element={<TheaterDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/edit-profile" element={<EditProfilePage />} />
         </Routes>
       </AppWrapper>
     </Router>
