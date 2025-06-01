@@ -1,23 +1,39 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Movie } from '../data/movies';
 import { useNavigate } from 'react-router-dom';
+
+export interface Movie {
+  id: number;
+  title: string;
+  genre: string;
+  releaseDate: string;
+  screeningStatus: string;
+  runtime: number;
+  actorName: string;
+  directorName: string;
+  distributorName: string;
+  viewingGrade: string;
+  description: string;
+  image: string;
+  rating: number;
+  screeningStatusText: string;
+  viewingGradeText: string;
+}
 
 type Props = {
   movie: Movie;
 };
 
 const MovieCard: React.FC<Props> = ({ movie }) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   return (
-
     <Card onClick={() => navigate(`/movie/${movie.id}`)}>
-      <Poster src={movie.poster} alt={movie.title} />
+      <Poster src={movie.image} alt={movie.title} />
       <Overlay>
         <Title>{movie.title}</Title>
         <Genre>{movie.genre}</Genre>
-        <Release>{movie.release}</Release>
-        <ReserveBtn>예매하기</ReserveBtn>
+        <Release>{movie.releaseDate}</Release>
+        <ReserveBtn>상세보기</ReserveBtn>
       </Overlay>
     </Card>
   );
@@ -26,12 +42,17 @@ const MovieCard: React.FC<Props> = ({ movie }) => {
 export default MovieCard;
 
 const Card = styled.div`
+  width: 200px;
+  flex-shrink: 0;  // 가로 스크롤 유지
+  margin-right: 1rem;
+
   position: relative;
   overflow: hidden;
   border-radius: 8px;
   background: ${({ theme }) => theme.card};
   cursor: pointer;
   transition: transform 0.2s;
+
   &:hover {
     transform: translateY(-4px);
   }
@@ -40,6 +61,7 @@ const Card = styled.div`
     transform: translateY(0);
   }
 `;
+
 
 const Poster = styled.img`
   width: 100%;

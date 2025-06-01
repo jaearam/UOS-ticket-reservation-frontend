@@ -16,7 +16,6 @@ import RegisterPage from './pages/RegisterPage';
 import EditProfilePage from './pages/EditProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
 
-
 const App: React.FC = () => {
   return (
     <AuthProvider>

@@ -1,11 +1,12 @@
-export interface ScheduleDto {
+export interface Schedule {
   id: string;
   movieId: number;
   movieTitle: string;
+  runtime: number;
+  screeningDate: string; // "20250603"
+  screeningStartTime: string; // "2025-06-03T09:30:00"
+  screeningEndTime: string;   // "2025-06-03T11:41:00"
+  cinemaName: string;
   screenId: string;
   screenName: string;
-  cinemaName: string;
-  screeningDate: string; // yyyy-MM-dd
-  screeningStartTime: string; // ISO string e.g. "2025-06-01T13:30:00"
-  runtime: number;
 }

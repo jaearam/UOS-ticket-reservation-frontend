@@ -15,16 +15,22 @@ const LoginPage: React.FC = () => {
 
     try {
       const response = await axios.post('http://localhost:8080/api/login', { userId, password });
-      const { accessToken } = response.data;
+      const { accessToken, member } = response.data;
 
-      // ✅ context 저장
+      // ✅ 토큰 저장 (context)
       login(accessToken);
+
+      // ✅ userId도 localStorage에 저장
+      localStorage.setItem('userId', member.id);
+
+      console.log('로그인 응답:', response.data);
       alert('로그인 성공');
       navigate('/mypage');
     } catch (err: any) {
       alert('로그인 실패: ' + (err?.response?.data?.message || '서버 오류'));
     }
   };
+
 
   return (
     <Wrapper>

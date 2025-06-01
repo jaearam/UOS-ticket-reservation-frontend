@@ -4,7 +4,13 @@ import MovieSynopsis from './MovieSynopsis';
 import MovieReviews from './MovieReviews';
 import MovieStills from './MovieStills';
 
-const MovieDetailTabs: React.FC = () => {
+type Props = {
+  description: string;
+  movieId: number;
+  stillImages?: string[];
+};
+
+const MovieDetailTabs: React.FC<Props> = ({ description, movieId, stillImages }) => {
   const [tab, setTab] = useState<'synopsis' | 'review' | 'stills'>('synopsis');
 
   return (
@@ -16,15 +22,16 @@ const MovieDetailTabs: React.FC = () => {
       </TabMenu>
 
       <Content>
-        {tab === 'synopsis' && <MovieSynopsis />}
-        {tab === 'review' && <MovieReviews />}
-        {tab === 'stills' && <MovieStills />}
+        {tab === 'synopsis' && <MovieSynopsis description={description} />}
+        {tab === 'review' && <MovieReviews movieId={movieId} />}
+        {tab === 'stills' && <MovieStills images={stillImages ?? []} />}
       </Content>
     </Wrapper>
   );
 };
 
 export default MovieDetailTabs;
+
 
 const Wrapper = styled.div`
   margin-top: 3rem;

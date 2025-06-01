@@ -1,37 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 
-type Props = {
-  title: string;
-  genre: string;
-  release: string;
-  poster: string;
+interface Props {
+  movieId: number;
+}
+
+const formatDate = (dateStr: string) => {
+  return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 };
 
-const ReserveMovieInfo: React.FC<Props> = ({ title, genre, release, poster }) => {
+const ReserveMovieInfo: React.FC<Props> = ({ movieId }) => {
+  const [movie, setMovie] = useState<any>(null);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:8080/api/movies/${movieId}`)
+      .then((res) => setMovie(res.data))
+      .catch((err) => console.error('영화 상세 조회 실패:', err));
+  }, [movieId]);
+
+  if (!movie) return <div>로딩 중...</div>;
+
   return (
-    <Box>
-      <Poster src={poster} alt={title} />
+    <Wrapper>
+      <Poster src={movie.image} alt={movie.title} />
       <Info>
-        <h3>{title}</h3>
-        <p>장르: {genre}</p>
-        <p>개봉일: {release}</p>
+        <h3>{movie.title}</h3>
+        <p>장르: {movie.genre}</p>
+        <p>개봉일: {formatDate(movie.releaseDate)}</p>
       </Info>
-    </Box>
+    </Wrapper>
   );
 };
 
 export default ReserveMovieInfo;
 
-const Box = styled.div`
+const Wrapper = styled.div`
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 `;
 
 const Poster = styled.img`
-  width: 100px;
-  height: 140px;
+  width: 150px;
+  height: 220px;
   object-fit: cover;
   border-radius: 6px;
 `;
@@ -39,17 +51,5 @@ const Poster = styled.img`
 const Info = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-
-  h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: ${({ theme }) => theme.primary};
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: ${({ theme }) => theme.textMuted};
-  }
+  gap: 0.4rem;
 `;

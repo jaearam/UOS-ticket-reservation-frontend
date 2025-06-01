@@ -1,80 +1,130 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { movies } from '../data/movies';
-import ReserveMovieInfo from '../components/ReserveMovieInfo';
 import ReserveDate from '../components/ReserveDate';
 import ReserveTime from '../components/ReserveTime';
 import ReserveSeat from '../components/ReserveSeat';
+import ReserveMovieInfo from '../components/ReserveMovieInfo';
+import { Schedule } from '../types/ScheduleList';
+import { Seat } from '../types/Seats'
+
+console.log('Authentication token', localStorage.getItem('accessToken'));
 
 const ReservePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const movie = movies.find((m) => m.id.toString() === id);
+  const movieId = Number(id);
 
-  // ✅ Hook은 항상 최상단에서 호출해야 함
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTheater, setSelectedTheater] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [seats, setSeats] = useState<Seat[]>([]);
 
-  if (!movie) {
-    return <Wrapper><h2>영화를 찾을 수 없습니다.</h2></Wrapper>;
+
+  useEffect(() => {
+  // 날짜나 스케줄이 바뀌면 선택 좌석 초기화
+  setSelectedSeats([]);
+}, [selectedDate, selectedSchedule]);
+
+  // ✅ 좌석 데이터 불러오기
+  useEffect(() => {
+    if (selectedSchedule?.id) {
+      axios
+        .get(`http://localhost:8080/api/reservations/schedules/${selectedSchedule.id}/seats`)
+        .then((res) => {
+          setSeats(res.data.seats);
+        })
+        .catch((err) => console.error('좌석 정보 조회 실패:', err));
+    }
+  }, [selectedSchedule]);
+
+    const handleToggleSeat = (seatNumber: string) => {
+      setSelectedSeats((prev) =>
+        prev.includes(seatNumber)
+          ? prev.filter((s) => s !== seatNumber)
+          : [...prev, seatNumber]
+      );
+    };
+
+
+const handleReserve = async () => {
+  if (!selectedSchedule || selectedSeats.length === 0) {
+    alert('좌석을 선택해주세요.');
+    return;
   }
 
-  const handleSeatToggle = (seat: string) => {
-    setSelectedSeats((prev) =>
-      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
-    );
-  };
+  if (selectedSeats.length > 1) {
+    alert('현재는 하나의 좌석만 선택할 수 있습니다.');
+    return;
+  }
 
-  const handleReserve = () => {
-    if (!selectedDate || !selectedTheater || !selectedTime || selectedSeats.length === 0) {
-      alert('날짜, 극장, 시간, 좌석을 모두 선택해주세요.');
-      return;
-    }
+  const selectedSeatNumber = selectedSeats[0];
+  console.log('선택한 좌석:', selectedSeatNumber);
+  console.log('선택한 스케줄:', selectedSchedule);
+  const selectedSeat = seats.find((s) => s.seatLabel === selectedSeatNumber);
+  if (!selectedSeat) {
+    alert('선택한 좌석 정보를 찾을 수 없습니다.');
+    return;
+  }
 
+  try {
+    const response = await axios.post('http://localhost:8080/api/reservations/create', {
+      scheduleId: String(selectedSchedule.id),
+      seatId: Number(selectedSeat.id),
+      phoneNumber: '01012345678', // TODO: 사용자 입력 or 상태에서 가져오기
+      discountCode: '',
+      discountAmount: 0,
+    });
+
+    const reservationId = response.data.id;
     navigate('/payment', {
       state: {
-        movieTitle: movie.title,
-        date: selectedDate,
-        time: selectedTime,
-        theater: selectedTheater,
-        seats: selectedSeats,
-        totalPrice: selectedSeats.length * 11000,
-      }
+        reservationId,
+      },
     });
-  };
+  } catch (error) {
+    console.error('예매 실패:', error);
+    alert('예매에 실패했습니다.');
+  }
+};
+
 
   return (
     <Wrapper>
-      <h2>{movie.title} 예매</h2>
+      <h2>영화 예매</h2>
 
       <Section>
-        <ReserveMovieInfo
-          title={movie.title}
-          genre={movie.genre}
-          release={movie.release}
-          poster={movie.poster}
-        />
+        <ReserveMovieInfo movieId={movieId} />
       </Section>
 
       <Section>
-        <ReserveDate selectedDate={selectedDate} onChange={setSelectedDate} />
+        <ReserveDate
+          movieId={movieId}
+          selectedDate={selectedDate}
+          onChange={setSelectedDate}
+        />
       </Section>
 
       <Section>
         <ReserveTime
-          selectedTheater={selectedTheater}
-          selectedTime={selectedTime}
-          onSelectTheater={setSelectedTheater}
-          onSelectTime={setSelectedTime}
+          movieId={movieId}
+          selectedDate={selectedDate}
+          selectedSchedule={selectedSchedule}
+          onSelectSchedule={setSelectedSchedule}
         />
       </Section>
 
-      <Section>
-        <ReserveSeat selectedSeats={selectedSeats} onSelectSeat={handleSeatToggle} />
-      </Section>
+      {selectedSchedule && (
+        <Section>
+        <ReserveSeat
+          seats={seats}
+          scheduleId={selectedSchedule.id}
+          selectedSeats={selectedSeats}
+          onSelectSeat={handleToggleSeat}
+        />
+        </Section>
+      )}
 
       <Section>
         <ReserveButton onClick={handleReserve}>예매하기</ReserveButton>
@@ -92,19 +142,7 @@ const Wrapper = styled.div`
   color: ${({ theme }) => theme.text};
 `;
 
-const Title = styled.h2`
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 2rem;
-`;
-
-const SubTitle = styled.h3`
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  color: ${({ theme }) => theme.textMuted};
-`;
-
-const Section = styled.div`
+const Section = styled.section`
   margin: 2rem 0;
   background: ${({ theme }) => theme.surface};
   padding: 1.5rem;

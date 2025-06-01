@@ -8,20 +8,22 @@ const EditProfilePage: React.FC = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
+    userId: '',
     email: '',
     phoneNumber: '',
     birthDate: '',
+    password: '',
   });
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await axios.get('http://localhost:8080/api/members/me', {
+        const res = await axios.get('http://localhost:8080/api/members/my', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const { email, phoneNumber, birthDate } = res.data;
-        setForm({ email, phoneNumber, birthDate });
+        const { email, phoneNumber, birthDate, userId } = res.data;
+        setForm({ email, phoneNumber, birthDate, userId, password: '' });
       } catch (err) {
         console.error('회원 정보 조회 실패:', err);
       }
@@ -36,7 +38,7 @@ const EditProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.put('http://localhost:8080/api/members', form, {
+      await axios.put('http://localhost:8080/api/members/my', form, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('회원 정보가 수정되었습니다.');
@@ -58,6 +60,15 @@ const EditProfilePage: React.FC = () => {
 
         <label>생년월일 (YYYYMMDD)</label>
         <Input name="birthDate" value={form.birthDate} onChange={handleChange} required />
+
+        <label>새 비밀번호</label>
+        <Input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
 
         {errorMsg && <ErrorMsg>{errorMsg}</ErrorMsg>}
 

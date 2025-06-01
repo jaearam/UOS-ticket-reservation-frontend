@@ -25,11 +25,28 @@ interface ReservationDto {
   totalPrice: number;
 }
 
+interface PointHistoryDto {
+  id: number;
+  type: 'EARN' | 'USE';
+  description: string;
+  amount: number;
+  createdAt: string;
+}
+
+interface PointHistoryResponse {
+  content: PointHistoryDto[];
+  totalPages: number;
+  totalElements: number;
+}
+
 const Mypage: React.FC = () => {
   const { token, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [member, setMember] = useState<MemberDto | null>(null);
   const [reservations, setReservations] = useState<ReservationDto[]>([]);
+  const [pointHistory, setPointHistory] = useState<PointHistoryDto[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -44,19 +61,36 @@ const Mypage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMember(res1.data);
+      } catch (err) {
+        console.error('회원 정보 조회 실패:', err);
+      }
 
+      try {
         const res2 = await axios.get<ReservationDto[]>('http://localhost:8080/api/reservations/my', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReservations(res2.data);
       } catch (err) {
-        console.error('마이페이지 조회 실패:', err);
-        alert('회원 정보를 불러올 수 없습니다.');
+        console.error('예매 내역 조회 실패:', err);
+      }
+
+      try {
+        const res3 = await axios.get<{ pointHistory: PointHistoryResponse }>(
+          'http://localhost:8080/api/members/my/points',
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { page, size: 5 },
+          }
+        );
+        setPointHistory(res3.data.pointHistory.content);
+        setTotalPages(Math.max(res3.data.pointHistory.totalPages, 1));
+      } catch (err) {
+        console.error('포인트 내역 조회 실패:', err);
       }
     };
 
     fetchData();
-  }, [isLoggedIn, token, navigate]);
+  }, [isLoggedIn, token, navigate, page]);
 
   if (!member) return <Wrapper>로딩 중...</Wrapper>;
 
@@ -94,12 +128,48 @@ const Mypage: React.FC = () => {
           ))
         )}
       </Section>
+
+      <Section>
+        <h3>💰 포인트 사용 내역</h3>
+        {pointHistory.length === 0 ? (
+          <p>포인트 사용 내역이 없습니다.</p>
+        ) : (
+          pointHistory.map((p) => (
+            <Card key={p.id}>
+              <p><strong>일시:</strong> {new Date(p.createdAt).toLocaleString()}</p>
+              <p><strong>내역:</strong> {p.description}</p>
+              <p>
+                <strong>금액:</strong>{' '}
+                <span style={{ color: p.type === 'USE' ? 'red' : 'limegreen' }}>
+                  {p.amount.toLocaleString()} P
+                </span>
+              </p>
+            </Card>
+          ))
+        )}
+        <Pagination>
+          <button
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            disabled={page <= 0 || totalPages <= 1}
+          >
+            이전
+          </button>
+          <span>{page + 1} / {totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            disabled={page + 1 >= totalPages || totalPages <= 1}
+          >
+            다음
+          </button>
+        </Pagination>
+      </Section>
     </Wrapper>
   );
 };
 
 export default Mypage;
 
+// 스타일
 const Wrapper = styled.div`
   max-width: 800px;
   margin: 0 auto;
@@ -152,5 +222,24 @@ const Btn = styled.button`
   font-weight: bold;
   &:hover {
     background: #c1130a;
+  }
+`;
+
+const Pagination = styled.div`
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  button {
+    background: none;
+    border: 1px solid #555;
+    color: ${({ theme }) => theme.text};
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   }
 `;

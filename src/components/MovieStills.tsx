@@ -1,23 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const stillImages = [
-  '/images/still1.jpg',
-  '/images/still2.jpg',
-  '/images/still3.jpg',
-  '/images/still4.jpg',
-];
-
-const MovieStills: React.FC = () => {
+const MovieStills: React.FC<{ images: string[] }> = ({ images }) => {
   return (
     <Wrapper>
-      <Grid>
-        {stillImages.map((src, idx) => (
-          <ImageBox key={idx}>
-            <img src={src} alt={`스틸컷 ${idx + 1}`} />
-          </ImageBox>
-        ))}
-      </Grid>
+      {images.length === 0 ? (
+        <p>스틸컷이 없습니다.</p>
+      ) : (
+        images.map((src, idx) => (
+          <StillImage key={idx} src={src} alt={`스틸컷 ${idx + 1}`} />
+        ))
+      )}
     </Wrapper>
   );
 };
@@ -25,27 +18,14 @@ const MovieStills: React.FC = () => {
 export default MovieStills;
 
 const Wrapper = styled.div`
-  padding: 1rem 2rem;
-`;
-
-const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
 `;
 
-const ImageBox = styled.div`
+const StillImage = styled.img`
+  width: 100%;
+  height: auto;
   border-radius: 8px;
-  overflow: hidden;
-  background: #000;
-  img {
-    width: 100%;
-    height: 320px;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s;
-  }
-  &:hover img {
-    transform: scale(1.05);
-  }
+  object-fit: cover;
 `;

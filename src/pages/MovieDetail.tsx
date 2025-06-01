@@ -6,54 +6,73 @@ import axios from 'axios';
 import MoviePoster from '../components/MoviePoster';
 import MovieInfoPanel from '../components/MovieInfoPanel';
 import MovieDetailTabs from '../components/MovieDetailTabs';
-import { ScheduleDto } from '../types/ScheduleList'; // ✅ 타입 정의 import
+
+interface MovieDetailDto {
+  id: number;
+  title: string;
+  genre: string;
+  releaseDate: string;
+  screeningStatus: string;
+  runtime: number;
+  actorName: string;
+  directorName: string;
+  distributorName: string;
+  viewingGrade: string;
+  description: string;
+  image: string;
+  rating: number;
+  screeningStatusText: string;
+  viewingGradeText: string;
+}
 
 const MovieDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [schedules, setSchedules] = useState<ScheduleDto[]>([]);
+  const [movie, setMovie] = useState<MovieDetailDto | null>(null);
 
   useEffect(() => {
     if (!id) return;
     axios
-      .get<ScheduleDto[]>(`/api/schedules?movieId=${id}`)
-      .then((res) => setSchedules(res.data))
-      .catch((err) => console.error('상영 일정 로드 실패:', err));
+      .get<MovieDetailDto>(`http://localhost:8080/api/movies/${id}`)
+      .then((res) => setMovie(res.data))
+      .catch((err) => console.error('영화 상세 정보 로드 실패:', err));
   }, [id]);
 
-  // 기존 dummy movie 는 제거
-  // 실제 상세 영화 정보는 /api/movies/:id 에서 받아오는게 좋음 (추후 개선)
+  if (!movie) return <Container>로딩 중...</Container>;
 
   return (
     <Container>
       <BackButton onClick={() => navigate(-1)}>← 뒤로가기</BackButton>
 
-      <MoviePoster poster={`/images/posters/${id}.jpg`} title={`영화 ${id}`} />
-      <MovieInfoPanel id={Number(id)} title={`영화 ${id}`} genre="장르" release="2024-01-01" />
+      <MoviePoster poster={movie.image} title={movie.title} />
+      <MovieInfoPanel
+        id={movie.id}
+        title={movie.title}
+        genre={movie.genre}
+        releaseDate={movie.releaseDate}
+        description={movie.description}
+        viewingGrade={movie.viewingGradeText}
+        rating={movie.rating}
+        distributorName={movie.distributorName}
+        directorName={movie.directorName}
+        runtime={movie.runtime}
+      />
+      {movie && (
+        <MovieDetailTabs
+          description={movie.description}
+          movieId={movie.id}
+          stillImages={movie.image ? [movie.image] : []}
+        />
+      )}
 
-      <MovieDetailTabs />
 
-      <Section>
-        <h3>🎟 상영 일정</h3>
-        {schedules.length === 0 ? (
-          <p>상영 일정이 없습니다.</p>
-        ) : (
-          schedules.map((s) => (
-            <ScheduleCard key={s.id}>
-              <p><strong>극장:</strong> {s.cinemaName} / {s.screenName}</p>
-              <p><strong>일시:</strong> {s.screeningDate} {new Date(s.screeningStartTime).toLocaleTimeString()} ~ 약 {s.runtime}분</p>
-            </ScheduleCard>
-          ))
-        )}
-      </Section>
     </Container>
   );
 };
 
 export default MovieDetail;
 
-// 스타일 유지 + 추가
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -83,12 +102,4 @@ const Section = styled.section`
   background: ${({ theme }) => theme.surface};
   padding: 1.5rem;
   border-radius: 10px;
-`;
-
-const ScheduleCard = styled.div`
-  padding: 1rem 0;
-  border-top: 1px solid #444;
-  &:first-child {
-    border-top: none;
-  }
 `;
