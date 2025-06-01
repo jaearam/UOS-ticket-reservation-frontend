@@ -1,25 +1,43 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
+  const { isLoggedIn, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <Nav>
       <Logo to="/">MovieBox</Logo>
+
       <Menu>
         <StyledLink to="/theaters">영화관</StyledLink>
         <StyledLink to="/mypage">마이페이지</StyledLink>
         <StyledLink to="/guest-lookup">비회원 조회</StyledLink>
       </Menu>
+
       <Auth>
-        <StyledLink to="/login">로그인</StyledLink>
-        <StyledLink to="/register">회원가입</StyledLink>
+        {isLoggedIn ? (
+          <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+        ) : (
+          <>
+            <StyledLink to="/login">로그인</StyledLink>
+            <StyledLink to="/register">회원가입</StyledLink>
+          </>
+        )}
       </Auth>
     </Nav>
   );
 };
 
 export default Header;
+
 
 const Nav = styled.nav`
   position: sticky;
@@ -59,3 +77,14 @@ const StyledLink = styled(Link)`
     color: ${({ theme }) => theme.primary};
   }
 `;
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  &:hover {
+    color: ${({ theme }) => theme.primary};
+  }
+`;
+

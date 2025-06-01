@@ -13,9 +13,12 @@ import TheaterDetailPage from './pages/TheaterDetailPage';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import { AuthProvider } from './contexts/AuthContext';
+
 
 const App: React.FC = () => {
   return (
+    <AuthProvider>
     <Router>
       <AppWrapper>
               <Header />
@@ -31,10 +34,10 @@ const App: React.FC = () => {
           <Route path="/theaters/:id" element={<TheaterDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          {/* 앞으로 여기에 추가: /movie/:id, /reserve 등 */}
         </Routes>
       </AppWrapper>
     </Router>
+    </AuthProvider>
   );
 };
 

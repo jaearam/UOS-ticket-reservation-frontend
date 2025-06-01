@@ -1,4 +1,7 @@
 // 📁 src/data/movies.ts
+
+import movie1 from './images/movie1.jpg';
+
 export type Movie = {
   id: number;
   title: string;
@@ -12,7 +15,7 @@ export const movies: Movie[] = [
   {
     id: 1,
     title: '몬스터즈',
-    poster: '/images/movie1.jpg',
+    poster: movie1,
     genre: '액션',
     release: '2024.05.20',
     status: 'now',

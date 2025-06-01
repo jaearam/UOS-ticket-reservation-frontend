@@ -1,26 +1,33 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 
 const GuestLookupPage: React.FC = () => {
+  const [reservationId, setReservationId] = useState('');
   const [phone, setPhone] = useState('');
-  const [found, setFound] = useState(false);
+  const [result, setResult] = useState<any | null>(null);
 
-  // 더미 데이터 (실제로는 phone 기반 검색 결과)
-  const reservation = {
-    id: 'R202405179001',
-    movieTitle: '이너월드',
-    date: '2024-05-21',
-    time: '18:00',
-    theater: 'CGV 홍대',
-    seatList: ['A5'],
-    totalPrice: 11000,
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.trim() === '') return alert('전화번호를 입력해주세요.');
-    // 실제 구현 시 → API 요청 후 성공 시 setFound(true)
-    setFound(true);
+
+    if (!reservationId.trim() || !phone.trim()) {
+      alert('예매번호와 전화번호를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const res = await axios.get('http://localhost:8080/api/reservations/non-member/check', {
+        params: {
+          reservationId,
+          phoneNumber: phone
+        }
+      });
+
+      setResult(res.data);
+    } catch (err) {
+      console.error('조회 실패:', err);
+      alert('조회에 실패했습니다. 정보를 다시 확인해주세요.');
+    }
   };
 
   return (
@@ -28,25 +35,33 @@ const GuestLookupPage: React.FC = () => {
       <Title>비회원 예매 확인</Title>
 
       <Form onSubmit={handleSearch}>
-        <label htmlFor="phone">전화번호 입력</label>
+        <label htmlFor="reservationId">예매번호</label>
+        <Input
+          id="reservationId"
+          value={reservationId}
+          onChange={(e) => setReservationId(e.target.value)}
+          placeholder="예: R202405179001"
+        />
+
+        <label htmlFor="phone">전화번호</label>
         <Input
           id="phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="010-0000-0000"
+          placeholder="01012345678"
         />
         <Btn type="submit">예매 내역 조회</Btn>
       </Form>
 
-      {found && (
+      {result && (
         <ResultBox>
           <h4>예매 내역</h4>
-          <p><strong>예매번호:</strong> {reservation.id}</p>
-          <p><strong>영화:</strong> {reservation.movieTitle}</p>
-          <p><strong>일시:</strong> {reservation.date} {reservation.time}</p>
-          <p><strong>극장:</strong> {reservation.theater}</p>
-          <p><strong>좌석:</strong> {reservation.seatList.join(', ')}</p>
-          <p><strong>결제금액:</strong> {reservation.totalPrice.toLocaleString()}원</p>
+          <p><strong>예매번호:</strong> {result.id}</p>
+          <p><strong>영화:</strong> {result.movieTitle}</p>
+          <p><strong>일시:</strong> {result.screeningDate} {result.screeningStartTime}</p>
+          <p><strong>극장:</strong> {result.cinemaName}</p>
+          <p><strong>좌석:</strong> {result.seatLabel}</p>
+          <p><strong>결제금액:</strong> {result.finalPrice.toLocaleString()}원</p>
         </ResultBox>
       )}
     </Wrapper>
@@ -55,6 +70,7 @@ const GuestLookupPage: React.FC = () => {
 
 export default GuestLookupPage;
 
+// 스타일 컴포넌트 그대로 유지
 const Wrapper = styled.div`
   max-width: 500px;
   margin: 0 auto;

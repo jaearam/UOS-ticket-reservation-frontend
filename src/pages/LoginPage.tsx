@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth(); // ✅ AuthContext 사용
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`로그인 시도: ${username}`);
-    // 추후 API 연동 예정
+
+    try {
+      const response = await axios.post('http://localhost:8080/api/login', { userId, password });
+      const { accessToken } = response.data;
+
+      // ✅ context 저장
+      login(accessToken);
+      alert('로그인 성공');
+      navigate('/mypage');
+    } catch (err: any) {
+      alert('로그인 실패: ' + (err?.response?.data?.message || '서버 오류'));
+    }
   };
 
   return (
@@ -19,8 +33,8 @@ const LoginPage: React.FC = () => {
         <Input
           type="text"
           placeholder="아이디"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
           required
         />
         <Input
@@ -43,6 +57,7 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
 
 const Wrapper = styled.div`
   max-width: 400px;

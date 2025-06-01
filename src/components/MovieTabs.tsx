@@ -1,10 +1,49 @@
-import React, { useState } from 'react';
+// ✅ MovieTabs.tsx - MovieDto → Movie 변환 포함
+
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { movies, Movie } from '../data/movies';
+import axios from 'axios';
 import MovieCard from './MovieCard';
+
+interface MovieDto {
+  id: number;
+  title: string;
+  genre: string;
+  releaseDate: string;
+  screeningStatus: string;
+  image: string;
+}
+
+interface Movie {
+  id: number;
+  title: string;
+  genre: string;
+  release: string;
+  status: 'now' | 'soon';
+  poster: string;
+}
+
+const mapMovieDtoToMovie = (dto: MovieDto): Movie => ({
+  id: dto.id,
+  title: dto.title,
+  genre: dto.genre,
+  release: dto.releaseDate,
+  poster: dto.image,
+  status: dto.screeningStatus === 'D' ? 'now' : 'soon',
+});
 
 const MovieTabs: React.FC = () => {
   const [tab, setTab] = useState<'now' | 'soon'>('now');
+  const [movies, setMovies] = useState<Movie[]>([]);
+
+  useEffect(() => {
+    axios.get('/api/movies')
+      .then(res => {
+        const mapped = res.data.map((dto: MovieDto) => mapMovieDtoToMovie(dto));
+        setMovies(mapped);
+      })
+      .catch(err => console.error('영화 목록 불러오기 실패:', err));
+  }, []);
 
   const filtered = movies.filter((m) => m.status === tab);
 
@@ -20,7 +59,7 @@ const MovieTabs: React.FC = () => {
       </TabHeader>
 
       <CardGrid>
-        {filtered.map((movie: Movie) => (
+        {filtered.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
         ))}
       </CardGrid>
