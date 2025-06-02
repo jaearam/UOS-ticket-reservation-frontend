@@ -15,6 +15,7 @@ const ReservePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const movieId = Number(id);
+  const accessToken = localStorage.getItem('accessToken');
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
@@ -70,12 +71,19 @@ const handleReserve = async () => {
 
   try {
     const response = await axios.post('http://localhost:8080/api/reservations/create', {
-      scheduleId: String(selectedSchedule.id),
+      scheduleId: Number(selectedSchedule.id),
       seatId: Number(selectedSeat.id),
-      phoneNumber: '01012345678', // TODO: 사용자 입력 or 상태에서 가져오기
-      discountCode: '',
-      discountAmount: 0,
-    });
+      // phoneNumber: '01012345678', // TODO: 사용자 입력 or 상태에서 가져오기
+      // discountCode: '',
+      // discountAmount: 0,
+    },
+    {
+      headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  }
+  );
 
     const reservationId = response.data.id;
     navigate('/payment', {
