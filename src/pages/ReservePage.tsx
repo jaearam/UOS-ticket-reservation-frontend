@@ -85,7 +85,8 @@ const handleReserve = async () => {
   }
   );
 
-    const reservationId = response.data.id;
+    const reservationId = response.data.reservationId;
+    console.log('예매 성공:', reservationId);
     navigate('/payment', {
       state: {
         reservationId,

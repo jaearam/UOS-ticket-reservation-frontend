@@ -1,32 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+
+interface ReservationDetail {
+  id: string;
+  movieTitle: string;
+  screenName: string;
+  cinemaName: string;
+  seatLabel: string;
+  finalPrice: number;
+  paymentStatus: string | null;
+  screeningStartTime: string;
+}
 
 const CompletePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { reservationId } = location.state || {};
+  console.log('예매 ID:', reservationId);
 
-  // 더미 예매 정보 (실제로는 location.state 또는 global state에서 전달받음)
-  const reservation = {
-    reservationId: 'R202405170123',
-    movieTitle: '이너월드',
-    date: '2024-05-20',
-    time: '16:00',
-    theater: 'CGV 강남',
-    seatList: ['C3', 'C4'],
-    totalPrice: 22000,
-    paymentMethod: '카드 결제',
-  };
+  const [reservation, setReservation] = useState<ReservationDetail | null>(null);
+
+  useEffect(() => {
+    if (!reservationId) return;
+    const accessToken = localStorage.getItem('accessToken');
+
+    axios
+      .get(`http://localhost:8080/api/reservations/${reservationId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((res) => setReservation(res.data))
+      .catch((err) => {
+        console.error('예매 정보 조회 실패:', err);
+        alert('예매 정보를 불러올 수 없습니다.');
+        navigate('/');
+      });
+  }, [reservationId, navigate]);
+
+  if (!reservation) {
+    return <Wrapper>예매 정보를 불러오는 중입니다...</Wrapper>;
+  }
+
+  // 날짜 + 시간 분리
+  const [date, time] = reservation.screeningStartTime.split('T');
 
   return (
     <Wrapper>
       <Title>예매가 완료되었습니다 🎉</Title>
       <Card>
-        <Row><strong>예매 번호</strong> {reservation.reservationId}</Row>
+        <Row><strong>예매 번호</strong> {reservation.id}</Row>
         <Row><strong>영화</strong> {reservation.movieTitle}</Row>
-        <Row><strong>일시</strong> {reservation.date} {reservation.time}</Row>
-        <Row><strong>극장</strong> {reservation.theater}</Row>
-        <Row><strong>좌석</strong> {reservation.seatList.join(', ')}</Row>
-        <Row><strong>결제</strong> {reservation.paymentMethod} / {reservation.totalPrice.toLocaleString()}원</Row>
+        <Row><strong>일시</strong> {date} {time.slice(0, 5)}</Row>
+        <Row><strong>극장</strong> {reservation.cinemaName} / {reservation.screenName}</Row>
+        <Row><strong>좌석</strong> {reservation.seatLabel}</Row>
+        <Row><strong>결제</strong> 신용카드 / {reservation.finalPrice.toLocaleString()}원</Row>
       </Card>
 
       <BtnRow>
@@ -40,6 +70,7 @@ const CompletePage: React.FC = () => {
 };
 
 export default CompletePage;
+
 
 const Wrapper = styled.div`
   max-width: 600px;

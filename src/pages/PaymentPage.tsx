@@ -1,32 +1,76 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+
+interface ReservationDetail {
+  movieTitle: string;
+  screenName: string;
+  cinemaName: string;
+  seatLabel: string;
+  seatGradeName: string;
+  basePrice: number;
+  discountAmount: number;
+  finalPrice: number;
+  screeningDate: string;
+  screeningStartTime: string;
+}
 
 const PaymentPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ 반드시 컴포넌트 최상단
+  const location = useLocation();
+  const { reservationId } = location.state || {};
 
-  const reservation = location.state as {
-    movieTitle: string;
-    date: string;
-    time: string;
-    theater: string;
-    seats: string[];
-    totalPrice: number;
-  };
-
+  const [reservation, setReservation] = useState<ReservationDetail | null>(null);
   const [method, setMethod] = useState('');
   const [agree, setAgree] = useState(false);
 
-  const handlePayment = () => {
-    if (!method) return alert('결제 수단을 선택해주세요.');
-    if (!agree) return alert('약관에 동의해주세요.');
+  useEffect(() => {
+    if (!reservationId) return;
+    const token = localStorage.getItem('accessToken');
+
+    axios
+      .get(`http://localhost:8080/api/reservations/${reservationId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => setReservation(res.data))
+      .catch((err) => {
+        console.error('예매 정보 불러오기 실패:', err);
+        alert('예매 정보를 불러오지 못했습니다.');
+      });
+  }, [reservationId]);
+
+const [isLoading, setIsLoading] = useState(false);
+
+const handlePayment = () => {
+  if (!method) return alert('결제 수단을 선택해주세요.');
+  if (!agree) return alert('약관에 동의해주세요.');
+
+  if (method === 'point') {
+    // 포인트 결제는 아직 미구현
+    alert('포인트 결제는 아직 준비 중입니다.');
+    return;
+  }
+
+  setIsLoading(true); // 로딩 시작
+
+  // 가상 결제 승인 요청
+  setTimeout(() => {
+    setIsLoading(false);
     alert('결제가 완료되었습니다!');
-    navigate('/complete');
-  };
+    navigate('/complete', {
+      state: {
+        reservationId,
+      },
+    });
+  }, 3000);
+};
+
 
   if (!reservation) {
-    return <Wrapper>예매 정보가 없습니다.</Wrapper>;
+    return <Wrapper>예매 정보 불러오는 중...</Wrapper>;
   }
 
   return (
@@ -34,10 +78,10 @@ const PaymentPage: React.FC = () => {
       <Title>결제 정보 확인</Title>
       <Card>
         <p><strong>영화:</strong> {reservation.movieTitle}</p>
-        <p><strong>일시:</strong> {reservation.date} {reservation.time}</p>
-        <p><strong>극장:</strong> {reservation.theater}</p>
-        <p><strong>좌석:</strong> {reservation.seats.join(', ')}</p>
-        <p><strong>금액:</strong> {reservation.totalPrice.toLocaleString()}원</p>
+        <p><strong>일시:</strong> {reservation.screeningStartTime.replace('T', ' ')}</p>
+        <p><strong>극장:</strong> {reservation.cinemaName} / {reservation.screenName}</p>
+        <p><strong>좌석:</strong> {reservation.seatLabel} ({reservation.seatGradeName})</p>
+        <p><strong>금액:</strong> {reservation.finalPrice.toLocaleString()}원</p>
       </Card>
 
       <Label>결제 수단 선택</Label>
@@ -52,7 +96,9 @@ const PaymentPage: React.FC = () => {
         <label htmlFor="agree">약관에 동의합니다.</label>
       </CheckboxRow>
 
-      <PaymentBtn onClick={handlePayment}>결제하기</PaymentBtn>
+      <PaymentBtn onClick={handlePayment} disabled={isLoading}>
+        {isLoading ? '결제 처리 중...' : '결제하기'}
+      </PaymentBtn>
     </Wrapper>
   );
 };

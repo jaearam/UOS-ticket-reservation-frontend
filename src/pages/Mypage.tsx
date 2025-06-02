@@ -15,15 +15,16 @@ interface MemberDto {
   gradeText: string;
 }
 
-interface ReservationDto {
+interface Reservation {
   id: string;
   movieTitle: string;
-  scheduleDate: string;
-  scheduleTime: string;
-  theaterName: string;
-  seatList: string[];
-  totalPrice: number;
+  cinemaName: string;
+  screenName: string;
+  seatLabel: string;
+  screeningStartTime: string;
+  finalPrice: number;
 }
+
 
 interface PointHistoryDto {
   id: number;
@@ -43,54 +44,47 @@ const Mypage: React.FC = () => {
   const { token, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const [member, setMember] = useState<MemberDto | null>(null);
-  const [reservations, setReservations] = useState<ReservationDto[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [pointHistory, setPointHistory] = useState<PointHistoryDto[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
+useEffect(() => {
+  if (!isLoggedIn) {
+    alert('로그인이 필요합니다.');
+    navigate('/login');
+    return;
+  }
 
-    const fetchData = async () => {
-      try {
-        const res1 = await axios.get<MemberDto>('http://localhost:8080/api/members/my', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMember(res1.data);
-      } catch (err) {
-        console.error('회원 정보 조회 실패:', err);
-      }
+  const fetchData = async () => {
+    try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
 
-      try {
-        const res2 = await axios.get<ReservationDto[]>('http://localhost:8080/api/reservations/my', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setReservations(res2.data);
-      } catch (err) {
-        console.error('예매 내역 조회 실패:', err);
-      }
-
-      try {
-        const res3 = await axios.get<{ pointHistory: PointHistoryResponse }>(
+      const [memberRes, reservationRes, pointRes] = await Promise.all([
+        axios.get<MemberDto>('http://localhost:8080/api/members/my', { headers }),
+        axios.get<Reservation[]>('http://localhost:8080/api/reservations/my', { headers }),
+        axios.get<{ pointHistory: PointHistoryResponse }>(
           'http://localhost:8080/api/members/my/points',
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers,
             params: { page, size: 5 },
           }
-        );
-        setPointHistory(res3.data.pointHistory.content);
-        setTotalPages(Math.max(res3.data.pointHistory.totalPages, 1));
-      } catch (err) {
-        console.error('포인트 내역 조회 실패:', err);
-      }
-    };
+        ),
+      ]);
 
-    fetchData();
-  }, [isLoggedIn, token, navigate, page]);
+      setMember(memberRes.data);
+      setReservations(reservationRes.data);
+      setPointHistory(pointRes.data.pointHistory.content);
+      setTotalPages(Math.max(pointRes.data.pointHistory.totalPages, 1));
+    } catch (err) {
+      console.error('마이페이지 데이터 조회 실패:', err);
+    }
+  };
+
+  fetchData();
+}, [isLoggedIn, token, navigate, page]);
 
   if (!member) return <Wrapper>로딩 중...</Wrapper>;
 
@@ -111,23 +105,53 @@ const Mypage: React.FC = () => {
         </ActionRow>
       </Section>
 
-      <Section>
-        <h3>🧾 예매 내역</h3>
-        {reservations.length === 0 ? (
-          <p>예매 내역이 없습니다.</p>
-        ) : (
-          reservations.map((r) => (
-            <Card key={r.id}>
-              <p><strong>예매번호:</strong> {r.id}</p>
-              <p><strong>영화:</strong> {r.movieTitle}</p>
-              <p><strong>일시:</strong> {r.scheduleDate} {r.scheduleTime}</p>
-              <p><strong>극장:</strong> {r.theaterName}</p>
-              <p><strong>좌석:</strong> {r.seatList.join(', ')}</p>
-              <p><strong>결제금액:</strong> {r.totalPrice.toLocaleString()}원</p>
-            </Card>
-          ))
-        )}
-      </Section>
+<Section>
+  <h3>🧾 예매 내역</h3>
+  {reservations.length === 0 ? (
+    <p>예매 내역이 없습니다.</p>
+  ) : (
+    reservations.map((r: Reservation) => {
+      const [date, time] = r.screeningStartTime.split('T');
+
+      const handleCancel = async () => {
+        const confirmed = window.confirm('예매를 취소하시겠습니까?');
+        if (!confirmed) return;
+
+        try {
+          const token = localStorage.getItem('accessToken');
+          await axios.delete(`http://localhost:8080/api/reservations/${r.id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          alert('예매가 취소되었습니다.');
+          setReservations((prev) => prev.filter((res) => res.id !== r.id));
+        } catch (err: any) {
+          console.error('예매 취소 실패:', err);
+          console.error('서버 응답 메시지:', err.response?.data?.message);
+          alert(`예매 취소 실패: ${err.response?.data?.message ?? '알 수 없는 오류'}`);
+        }
+      };
+
+
+      return (
+        <Card key={r.id}>
+          <p><strong>예매번호:</strong> {r.id}</p>
+          <p><strong>영화:</strong> {r.movieTitle}</p>
+          <p><strong>일시:</strong> {date} {time.slice(0, 5)}</p>
+          <p><strong>극장:</strong> {r.cinemaName} / {r.screenName}</p>
+          <p><strong>좌석:</strong> {r.seatLabel}</p>
+          <p><strong>결제금액:</strong> {r.finalPrice.toLocaleString()}원</p>
+          <CancelBtn onClick={handleCancel}>예매 취소</CancelBtn>
+        </Card>
+      );
+    })
+  )}
+</Section>
+
+
+
 
       <Section>
         <h3>💰 포인트 사용 내역</h3>
@@ -241,5 +265,18 @@ const Pagination = styled.div`
       opacity: 0.4;
       cursor: default;
     }
+  }
+`;
+const CancelBtn = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: #d9363e;
   }
 `;
