@@ -7,12 +7,14 @@ interface AuthContextProps {
   token: string | null;
   login: (accessToken: string) => void;
   logout: () => void;
+  user: {userId: string} | null; // Assuming user object has userId
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<{ userId: string } | null>(null); // 예시
 
   useEffect(() => {
     const storedToken = localStorage.getItem('accessToken');
@@ -21,10 +23,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (accessToken: string) => {
-    setToken(accessToken);
-    localStorage.setItem('accessToken', accessToken);
-  };
+const login = async (accessToken: string) => {
+  setToken(accessToken);
+  localStorage.setItem('accessToken', accessToken);
+
+  try {
+    const res = await axios.get('http://localhost:8080/api/members/my', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    setUser({ userId: res.data.userId }); // 필요한 필드만 추출
+  } catch (err) {
+    console.error('사용자 정보 불러오기 실패:', err);
+    setUser(null);
+  }
+};
+
 
   const logout = async () => {
     try {
@@ -48,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         login,
         logout,
+        user, // 현재 사용자 정보
       }}
     >
       {children}

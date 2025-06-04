@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,6 +20,10 @@ const Header: React.FC = () => {
         <StyledLink to="/theaters">영화관</StyledLink>
         <StyledLink to="/mypage">마이페이지</StyledLink>
         <StyledLink to="/guest-lookup">비회원 조회</StyledLink>
+
+      {user?.userId === 'admin' && (
+        <StyledLink to="/admin">관리자 페이지</StyledLink>
+      )}
       </Menu>
 
       <Auth>
@@ -87,4 +91,3 @@ const LogoutButton = styled.button`
     color: ${({ theme }) => theme.primary};
   }
 `;
-

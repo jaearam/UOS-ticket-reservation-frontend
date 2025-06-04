@@ -1,12 +1,11 @@
-// ✅ ReserveDate.tsx 수정
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 
-
 const formatDate = (dateStr: string) => {
   return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 };
+
 interface Props {
   movieId: number;
   selectedDate: string;

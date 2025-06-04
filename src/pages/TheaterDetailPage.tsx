@@ -1,3 +1,4 @@
+// pages/TheaterDetailPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -23,10 +24,8 @@ function formatDate(date: string) {
   return `${Number(m)}월 ${Number(d)}일`;
 }
 
-
 const TheaterDetailPage: React.FC = () => {
   const { cinemaId } = useParams();
-  console.log('cinemaId:', cinemaId);
   const navigate = useNavigate();
 
   const [cinema, setCinema] = useState<{ name: string; location: string; screenCount: number } | null>(null);
@@ -37,78 +36,87 @@ const TheaterDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (!cinemaId) return;
+    const accessToken = localStorage.getItem('accessToken');
 
-    // 1. 영화관 정보
-    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}`)
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
       .then((res) => setCinema(res.data))
       .catch(console.error);
 
-    // 2. 현재 상영작
-    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/current`)
-      .then((res) => setMovies(res.data))
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/current`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+      .then((res) => setMovies(res.data.movies))
       .catch(console.error);
   }, [cinemaId]);
 
   useEffect(() => {
     if (!selectedMovie || !selectedDate) return;
+    const accessToken = localStorage.getItem('accessToken');
+    const date = selectedDate.replaceAll(/-/g, '');
 
-    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/${selectedMovie.id}/schedules/dates/${selectedDate}`)
-      .then((res) => setSchedules(res.data))
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/${selectedMovie.id}/schedules/dates/${date}`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+      .then((res) => setSchedules(res.data.schedules))
       .catch(console.error);
   }, [cinemaId, selectedMovie, selectedDate]);
 
-  const handleDateClick = (date: string) => {
-    setSelectedDate(date);
-  };
+  const handleDateClick = (date: string) => setSelectedDate(date);
 
-  const handleScheduleClick = (scheduleId: string) => {
-    navigate(`/reserve/${scheduleId}`);
+  const handleScheduleClick = (schedule: Schedule) => {
+    navigate(`/reserve/${selectedMovie?.id}`, {
+      state: { selectedSchedule: schedule, selectedDate },
+    });
   };
 
   return (
     <Wrapper>
       {cinema && (
-        <>
+        <CinemaInfo>
           <h2>{cinema.name}</h2>
           <p>{cinema.location}</p>
           <p>상영관 수: {cinema.screenCount}개</p>
-        </>
+        </CinemaInfo>
       )}
 
-      <DateSelector>
-        {getDateRange(7).map((d) => (
-          <button
-            key={d}
-            onClick={() => handleDateClick(d)}
-            className={selectedDate === d ? 'active' : ''}
-          >
-            {formatDate(d)}
-          </button>
-        ))}
-      </DateSelector>
+      <Section>
+        <ScrollRow>
+          {getDateRange(7).map((d) => (
+            <SelectButton
+              key={d}
+              selected={selectedDate === d}
+              onClick={() => handleDateClick(d)}
+            >
+              {formatDate(d)}
+            </SelectButton>
+          ))}
+        </ScrollRow>
 
-      <MovieSelector>
-        {movies.map((movie) => (
-          <button
-            key={movie.id}
-            onClick={() => setSelectedMovie(movie)}
-            className={selectedMovie?.id === movie.id ? 'active' : ''}
-          >
-            {movie.title}
-          </button>
-        ))}
-      </MovieSelector>
+        <ScrollRow>
+          {movies.map((movie) => (
+            <SelectButton
+              key={movie.id}
+              selected={selectedMovie?.id === movie.id}
+              onClick={() => setSelectedMovie(movie)}
+            >
+              {movie.title}
+            </SelectButton>
+          ))}
+        </ScrollRow>
+      </Section>
 
       <ScheduleList>
         {schedules.map((s) => (
-          <ScheduleCard key={s.id} onClick={() => handleScheduleClick(s.id)}>
-            <p><strong>{s.movieTitle}</strong></p>
-            <p>{s.screeningStartTime.slice(11, 16)} ~ {s.screeningEndTime.slice(11, 16)}</p>
-            <p>{s.screenName}</p>
+          <ScheduleCard key={s.id} onClick={() => handleScheduleClick(s)}>
+            <Title>{s.movieTitle}</Title>
+            <Time>{s.screeningStartTime.slice(11, 16)} ~ {s.screeningEndTime.slice(11, 16)}</Time>
+            <Meta>{s.screenName}</Meta>
           </ScheduleCard>
         ))}
         {schedules.length === 0 && selectedMovie && (
-          <p style={{ color: '#888' }}>선택한 날짜에 해당 영화의 상영 스케줄이 없습니다.</p>
+          <EmptyText>선택한 날짜에 해당 영화의 상영 스케줄이 없습니다.</EmptyText>
         )}
       </ScheduleList>
     </Wrapper>
@@ -117,50 +125,92 @@ const TheaterDetailPage: React.FC = () => {
 
 export default TheaterDetailPage;
 
-
+// 스타일 정의
 const Wrapper = styled.div`
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2.5rem 1rem;
+  color: ${({ theme }) => theme.text};
 `;
 
-const DateSelector = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin: 1rem 0;
+const CinemaInfo = styled.div`
+  margin-bottom: 2rem;
 
-  button {
-    padding: 0.5rem 0.8rem;
-    border: none;
-    background: #eee;
-    border-radius: 6px;
-    cursor: pointer;
+  h2 {
+    font-size: 1.5rem;
+    color: ${({ theme }) => theme.primary};
+  }
 
-    &.active {
-      background: ${({ theme }) => theme.primary};
-      color: white;
-    }
+  p {
+    color: ${({ theme }) => theme.textMuted};
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
   }
 `;
 
-const MovieSelector = styled(DateSelector)``;
+const Section = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const ScrollRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 0.8rem;
+`;
+
+const SelectButton = styled.button<{ selected: boolean }>`
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  background: ${({ theme, selected }) => selected ? theme.primary : theme.surface};
+  color: ${({ selected }) => selected ? '#fff' : '#ccc'};
+
+  &:hover {
+    background: ${({ theme }) => theme.primary};
+    color: white;
+  }
+`;
 
 const ScheduleList = styled.div`
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 `;
 
 const ScheduleCard = styled.div`
-  padding: 1rem;
-  margin-bottom: 1rem;
   background: ${({ theme }) => theme.surface};
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
   cursor: pointer;
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  transition: background 0.2s;
 
   &:hover {
     background: ${({ theme }) => theme.primary}22;
   }
+`;
 
-  p {
-    margin: 0.3rem 0;
-  }
+const Title = styled.p`
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+`;
+
+const Time = styled.p`
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+`;
+
+const Meta = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const EmptyText = styled.p`
+  text-align: center;
+  margin-top: 2rem;
+  color: #888;
 `;

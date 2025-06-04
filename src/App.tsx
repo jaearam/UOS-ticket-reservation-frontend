@@ -15,7 +15,10 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import EditProfilePage from './pages/EditProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
-
+import AdminHome from './pages/AdminHome';
+import MovieListPage from './pages/admin/MovieListPage';
+import MovieEditPage from './pages/admin/MovieEditPage';
+import MovieAddPage from './pages/admin/MovieAddPage';
 const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -35,6 +38,12 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/edit-profile" element={<EditProfilePage />} />
+
+          <Route path="/admin" element={<AdminHome />} />
+          <Route path="/admin/movies" element={<MovieListPage />} />
+          <Route path="/admin/movies/edit/:id" element={<MovieEditPage />} />
+          <Route path="/admin/movies/add" element={<MovieAddPage />} />
+
         </Routes>
       </AppWrapper>
     </Router>

@@ -14,6 +14,7 @@ console.log('Authentication token', localStorage.getItem('accessToken'));
 const ReservePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
   const movieId = Number(id);
   const accessToken = localStorage.getItem('accessToken');
   const isLoggedIn = !!accessToken;

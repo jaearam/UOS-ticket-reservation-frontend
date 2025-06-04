@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterPage: React.FC = () => {
   const [form, setForm] = useState({
@@ -13,6 +14,7 @@ const RegisterPage: React.FC = () => {
 
   const [errorMsg, setErrorMsg] = useState('');
   const [idCheckMessage, setIdCheckMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -53,6 +55,7 @@ const RegisterPage: React.FC = () => {
       await axios.post('http://localhost:8080/api/signup', form);
       alert('회원가입이 완료되었습니다!');
       setErrorMsg('');
+      navigate('/login'); // 회원가입 후 로그인 페이지로 이동
     } catch (err: any) {
       setErrorMsg(err.response?.data?.message || '서버 오류로 회원가입에 실패했습니다.');
     }
@@ -62,7 +65,7 @@ const RegisterPage: React.FC = () => {
     <Wrapper>
       <h2>회원가입</h2>
       <Form onSubmit={handleSubmit}>
-        <label>아이디</label>
+        <label>아이디 (4~20자)</label>
         <IdCheckRow>
           <Input name="userId" value={form.userId} onChange={handleChange} required />
           <CheckButton type="button" onClick={handleIdCheck}>중복 확인</CheckButton>
