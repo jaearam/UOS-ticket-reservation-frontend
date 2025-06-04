@@ -2,17 +2,8 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { Reservation } from '../types/Reservation'; 
 
-interface ReservationDetail {
-  id: string;
-  movieTitle: string;
-  screenName: string;
-  cinemaName: string;
-  seatLabel: string;
-  finalPrice: number;
-  paymentStatus: string | null;
-  screeningStartTime: string;
-}
 
 const CompletePage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,17 +11,40 @@ const CompletePage: React.FC = () => {
   const { reservationId } = location.state || {};
   console.log('예매 ID:', reservationId);
 
-  const [reservation, setReservation] = useState<ReservationDetail | null>(null);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
 
+  const handleIssueTicket = async () => {
+    if (!reservation) return;
+
+    const accessToken = localStorage.getItem('accessToken');
+    const isLoggedIn = !!accessToken;
+  
+    try {
+      await axios.post(
+        `http://localhost:8080/api/reservations/${reservation.id}/issue`,
+        {},
+        {
+        headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
+        }
+      );
+
+      alert('티켓이 발급되었습니다! (PDF 저장/인쇄 기능은 추후 제공 예정)');
+      // 필요 시 여기에 window.print(), 또는 PDF 다운로드 기능 추가
+    } catch (err:any) {
+      console.error('티켓 발급 실패:', err.response?.data || err);
+      alert('티켓 발급에 실패했습니다.');
+    }
+  };
+
+  
   useEffect(() => {
     if (!reservationId) return;
     const accessToken = localStorage.getItem('accessToken');
+    const isLoggedIn = !!accessToken;
 
     axios
       .get(`http://localhost:8080/api/reservations/${reservationId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
       })
       .then((res) => setReservation(res.data))
       .catch((err) => {
@@ -56,12 +70,12 @@ const CompletePage: React.FC = () => {
         <Row><strong>일시</strong> {date} {time.slice(0, 5)}</Row>
         <Row><strong>극장</strong> {reservation.cinemaName} / {reservation.screenName}</Row>
         <Row><strong>좌석</strong> {reservation.seatLabel}</Row>
-        <Row><strong>결제</strong> 신용카드 / {reservation.finalPrice.toLocaleString()}원</Row>
+        <Row><strong>결제</strong> {reservation.finalPrice.toLocaleString()}원</Row>
       </Card>
 
       <BtnRow>
         <ActionBtn onClick={() => alert('PDF 저장 기능은 준비 중입니다.')}>PDF 저장</ActionBtn>
-        <ActionBtn onClick={() => alert('인쇄 기능은 준비 중입니다.')}>인쇄</ActionBtn>
+        <ActionBtn onClick={handleIssueTicket}>티켓 발급</ActionBtn>
       </BtnRow>
 
       <BackBtn onClick={() => navigate('/')}>메인으로</BackBtn>

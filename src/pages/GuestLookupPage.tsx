@@ -19,7 +19,7 @@ const GuestLookupPage: React.FC = () => {
       const res = await axios.get('http://localhost:8080/api/reservations/non-member/check', {
         params: {
           reservationId,
-          phoneNumber: phone
+          phoneNumber: Number(phone)
         }
       });
 

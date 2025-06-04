@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
+import { Reservation } from '../types/Reservation'; 
+import { PointHistory } from '../types/PointHistory';
 interface MemberDto {
   id: number;
   userId: string;
@@ -15,27 +16,8 @@ interface MemberDto {
   gradeText: string;
 }
 
-interface Reservation {
-  id: string;
-  movieTitle: string;
-  cinemaName: string;
-  screenName: string;
-  seatLabel: string;
-  screeningStartTime: string;
-  finalPrice: number;
-}
-
-
-interface PointHistoryDto {
-  id: number;
-  type: 'EARN' | 'USE';
-  description: string;
-  amount: number;
-  createdAt: string;
-}
-
 interface PointHistoryResponse {
-  content: PointHistoryDto[];
+  content: PointHistory[];
   totalPages: number;
   totalElements: number;
 }
@@ -45,7 +27,7 @@ const Mypage: React.FC = () => {
   const navigate = useNavigate();
   const [member, setMember] = useState<MemberDto | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [pointHistory, setPointHistory] = useState<PointHistoryDto[]>([]);
+  const [pointHistory, setPointHistory] = useState<PointHistory[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -75,7 +57,9 @@ useEffect(() => {
       ]);
 
       setMember(memberRes.data);
-      setReservations(reservationRes.data);
+      setReservations(
+        reservationRes.data.filter((r) => r.status !== 'D')
+      ); // D 상태는 취소된 예매로 필터링
       setPointHistory(pointRes.data.pointHistory.content);
       setTotalPages(Math.max(pointRes.data.pointHistory.totalPages, 1));
     } catch (err) {
@@ -159,16 +143,17 @@ useEffect(() => {
           <p>포인트 사용 내역이 없습니다.</p>
         ) : (
           pointHistory.map((p) => (
-            <Card key={p.id}>
-              <p><strong>일시:</strong> {new Date(p.createdAt).toLocaleString()}</p>
-              <p><strong>내역:</strong> {p.description}</p>
-              <p>
-                <strong>금액:</strong>{' '}
-                <span style={{ color: p.type === 'USE' ? 'red' : 'limegreen' }}>
-                  {p.amount.toLocaleString()} P
-                </span>
-              </p>
-            </Card>
+          <Card key={p.id}>
+            <p><strong>일시:</strong> {new Date(p.pointTime).toLocaleString()}</p>
+            <p><strong>내역:</strong> {p.typeText}</p>
+            <p>
+              <strong>금액:</strong>{' '}
+              <span style={{ color: p.type === 'U' ? 'red' : 'limegreen' }}>
+                {p.amount.toLocaleString()} P
+              </span>
+            </p>
+          </Card>
+
           ))
         )}
         <Pagination>

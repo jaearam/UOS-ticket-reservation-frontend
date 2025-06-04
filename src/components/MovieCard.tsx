@@ -1,24 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-
-export interface Movie {
-  id: number;
-  title: string;
-  genre: string;
-  releaseDate: string;
-  screeningStatus: string;
-  runtime: number;
-  actorName: string;
-  directorName: string;
-  distributorName: string;
-  viewingGrade: string;
-  description: string;
-  image: string;
-  rating: number;
-  screeningStatusText: string;
-  viewingGradeText: string;
-}
+import { Movie } from '../types/Movie';
 
 type Props = {
   movie: Movie;

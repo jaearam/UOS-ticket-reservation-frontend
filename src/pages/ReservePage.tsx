@@ -6,7 +6,7 @@ import ReserveDate from '../components/ReserveDate';
 import ReserveTime from '../components/ReserveTime';
 import ReserveSeat from '../components/ReserveSeat';
 import ReserveMovieInfo from '../components/ReserveMovieInfo';
-import { Schedule } from '../types/ScheduleList';
+import { Schedule } from '../types/Schedule';
 import { Seat } from '../types/Seats'
 
 console.log('Authentication token', localStorage.getItem('accessToken'));
@@ -16,12 +16,13 @@ const ReservePage: React.FC = () => {
   const navigate = useNavigate();
   const movieId = Number(id);
   const accessToken = localStorage.getItem('accessToken');
+  const isLoggedIn = !!accessToken;
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
-
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
   // 날짜나 스케줄이 바뀌면 선택 좌석 초기화
@@ -50,14 +51,20 @@ const ReservePage: React.FC = () => {
 
 
 const handleReserve = async () => {
+
+  
   if (!selectedSchedule || selectedSeats.length === 0) {
     alert('좌석을 선택해주세요.');
     return;
   }
-
+  
   if (selectedSeats.length > 1) {
     alert('현재는 하나의 좌석만 선택할 수 있습니다.');
     return;
+  }
+  
+  if (!isLoggedIn && !phoneNumber.trim()) {
+    return alert('로그인하거나 전화번호를 입력해주세요.');
   }
 
   const selectedSeatNumber = selectedSeats[0];
@@ -69,21 +76,19 @@ const handleReserve = async () => {
     return;
   }
 
+  const payload = {
+    scheduleId: Number(selectedSchedule.id),
+    seatId: Number(selectedSeat.id),
+    phoneNumber: isLoggedIn ? undefined : phoneNumber, // 비회원만 전송
+  };
+
   try {
-    const response = await axios.post('http://localhost:8080/api/reservations/create', {
-      scheduleId: Number(selectedSchedule.id),
-      seatId: Number(selectedSeat.id),
-      // phoneNumber: '01012345678', // TODO: 사용자 입력 or 상태에서 가져오기
-      // discountCode: '',
-      // discountAmount: 0,
-    },
+    console.log('예매 요청 데이터:', payload);
+    const response = await axios.post('http://localhost:8080/api/reservations/create', payload,
     {
-      headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  }
-  );
+      headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
+    }
+    );
 
     const reservationId = response.data.reservationId;
     console.log('예매 성공:', reservationId);
@@ -135,6 +140,21 @@ const handleReserve = async () => {
         </Section>
       )}
 
+      {!isLoggedIn && (
+      <Section>
+        <InputGroup>
+          <label>전화번호 (비회원 예매 전용)</label>
+          <input
+            type="text"
+            placeholder="01012345678"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
+        </InputGroup>
+      </Section>
+    )}
+
+
       <Section>
         <ReserveButton onClick={handleReserve}>예매하기</ReserveButton>
       </Section>
@@ -172,5 +192,31 @@ const ReserveButton = styled.button`
 
   &:hover {
     background: #c1130a;
+  }
+`;
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+
+  label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: ${({ theme }) => theme.text};
+  }
+
+  input {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    background: ${({ theme }) => theme.background};
+    color: ${({ theme }) => theme.text};
+
+    &:focus {
+      border-color: ${({ theme }) => theme.primary};
+      box-shadow: 0 0 0 2px rgba(255, 87, 87, 0.2);
+    }
   }
 `;

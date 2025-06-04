@@ -1,84 +1,166 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import styled from 'styled-components';
+import { Movie } from '../types/Movie';
+import { Schedule } from '../types/Schedule';
 
-const theaterData = [
-  {
-    id: 1,
-    name: 'CGV 강남',
-    location: '서울시 강남구 테헤란로 123',
-    screenCount: 6,
-    schedule: [
-      { movie: '이너월드', time: '12:00 / 15:00 / 18:00' },
-      { movie: '몬스터즈', time: '13:30 / 16:30 / 20:00' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'CGV 용산아이파크몰',
-    location: '서울시 용산구 한강대로 23길',
-    screenCount: 10,
-    schedule: [
-      { movie: '소울플레이', time: '11:00 / 14:00 / 17:00' },
-    ],
-  },
-];
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getDateRange(days: number) {
+  const base = new Date();
+  return Array.from({ length: days }).map((_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+function formatDate(date: string) {
+  const [y, m, d] = date.split('-');
+  return `${Number(m)}월 ${Number(d)}일`;
+}
+
 
 const TheaterDetailPage: React.FC = () => {
-  const { id } = useParams();
-  const theater = theaterData.find((t) => t.id.toString() === id);
+  const { cinemaId } = useParams();
+  console.log('cinemaId:', cinemaId);
+  const navigate = useNavigate();
 
-  if (!theater) return <Wrapper>해당 영화관을 찾을 수 없습니다.</Wrapper>;
+  const [cinema, setCinema] = useState<{ name: string; location: string; screenCount: number } | null>(null);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(getToday());
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+
+  useEffect(() => {
+    if (!cinemaId) return;
+
+    // 1. 영화관 정보
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}`)
+      .then((res) => setCinema(res.data))
+      .catch(console.error);
+
+    // 2. 현재 상영작
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/current`)
+      .then((res) => setMovies(res.data))
+      .catch(console.error);
+  }, [cinemaId]);
+
+  useEffect(() => {
+    if (!selectedMovie || !selectedDate) return;
+
+    axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/${selectedMovie.id}/schedules/dates/${selectedDate}`)
+      .then((res) => setSchedules(res.data))
+      .catch(console.error);
+  }, [cinemaId, selectedMovie, selectedDate]);
+
+  const handleDateClick = (date: string) => {
+    setSelectedDate(date);
+  };
+
+  const handleScheduleClick = (scheduleId: string) => {
+    navigate(`/reserve/${scheduleId}`);
+  };
 
   return (
     <Wrapper>
-      <Title>{theater.name}</Title>
-      <Info>
-        <p><strong>주소:</strong> {theater.location}</p>
-        <p><strong>상영관 수:</strong> {theater.screenCount}개</p>
-      </Info>
+      {cinema && (
+        <>
+          <h2>{cinema.name}</h2>
+          <p>{cinema.location}</p>
+          <p>상영관 수: {cinema.screenCount}개</p>
+        </>
+      )}
 
-      <Section>
-        <h3>상영 중인 영화</h3>
-        {theater.schedule.map((s, idx) => (
-          <MovieRow key={idx}>
-            🎬 <strong>{s.movie}</strong> - {s.time}
-          </MovieRow>
+      <DateSelector>
+        {getDateRange(7).map((d) => (
+          <button
+            key={d}
+            onClick={() => handleDateClick(d)}
+            className={selectedDate === d ? 'active' : ''}
+          >
+            {formatDate(d)}
+          </button>
         ))}
-      </Section>
+      </DateSelector>
+
+      <MovieSelector>
+        {movies.map((movie) => (
+          <button
+            key={movie.id}
+            onClick={() => setSelectedMovie(movie)}
+            className={selectedMovie?.id === movie.id ? 'active' : ''}
+          >
+            {movie.title}
+          </button>
+        ))}
+      </MovieSelector>
+
+      <ScheduleList>
+        {schedules.map((s) => (
+          <ScheduleCard key={s.id} onClick={() => handleScheduleClick(s.id)}>
+            <p><strong>{s.movieTitle}</strong></p>
+            <p>{s.screeningStartTime.slice(11, 16)} ~ {s.screeningEndTime.slice(11, 16)}</p>
+            <p>{s.screenName}</p>
+          </ScheduleCard>
+        ))}
+        {schedules.length === 0 && selectedMovie && (
+          <p style={{ color: '#888' }}>선택한 날짜에 해당 영화의 상영 스케줄이 없습니다.</p>
+        )}
+      </ScheduleList>
     </Wrapper>
   );
 };
 
 export default TheaterDetailPage;
 
+
 const Wrapper = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  color: ${({ theme }) => theme.text};
 `;
 
-const Title = styled.h2`
-  font-size: 1.6rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: ${({ theme }) => theme.primary};
-`;
+const DateSelector = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
 
-const Info = styled.div`
-  margin-bottom: 2rem;
-  p {
-    margin: 0.4rem 0;
+  button {
+    padding: 0.5rem 0.8rem;
+    border: none;
+    background: #eee;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &.active {
+      background: ${({ theme }) => theme.primary};
+      color: white;
+    }
   }
 `;
 
-const Section = styled.section`
-  background: ${({ theme }) => theme.surface};
-  padding: 1.5rem;
-  border-radius: 8px;
+const MovieSelector = styled(DateSelector)``;
+
+const ScheduleList = styled.div`
+  margin-top: 1.5rem;
 `;
 
-const MovieRow = styled.div`
-  margin: 0.6rem 0;
+const ScheduleCard = styled.div`
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.primary}22;
+  }
+
+  p {
+    margin: 0.3rem 0;
+  }
 `;

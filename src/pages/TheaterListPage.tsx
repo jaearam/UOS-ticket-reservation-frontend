@@ -1,41 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-const theaters = [
-  {
-    id: 1,
-    name: 'CGV 강남',
-    location: '서울시 강남구 테헤란로 123',
-    screenCount: 6,
-  },
-  {
-    id: 2,
-    name: 'CGV 용산아이파크몰',
-    location: '서울시 용산구 한강대로 23길',
-    screenCount: 10,
-  },
-  {
-    id: 3,
-    name: 'CGV 홍대입구',
-    location: '서울시 마포구 양화로 23',
-    screenCount: 5,
-  },
-];
+interface Cinema {
+  id: string;
+  name: string;
+  location: string;
+  regionId: string;
+  regionName: string;
+  screenCount: number;
+}
 
 const TheaterListPage: React.FC = () => {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const token = localStorage.getItem('accessToken');
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/cinemas', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    .then((res) => setCinemas(res.data))
+    .catch((err) => {
+      console.error('영화관 목록 불러오기 실패:', err);
+      alert('영화관 목록을 불러오지 못했습니다.');
+    });
+  }, []);
+
   return (
     <Wrapper>
       <Title>영화관 목록</Title>
       <Grid>
-        {theaters.map((theater) => (
-          <Card key={theater.id}>
-            <h3>{theater.name}</h3>
-            <p>{theater.location}</p>
-            <p>상영관 수: {theater.screenCount}개</p>
-
-            <Link to={`/theaters/${theater.id}`}>상세보기</Link>
-
+        {cinemas.map((cinema) => (
+          <Card key={cinema.id}>
+            <h3>{cinema.name}</h3>
+            <p>{cinema.location}</p>
+            <p>지역: {cinema.regionName}</p>
+            <p>상영관 수: {cinema.screenCount}개</p>
+            <Link to={`/theaters/${cinema.id}`}>상세보기</Link>
           </Card>
         ))}
       </Grid>
