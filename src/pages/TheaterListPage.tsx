@@ -46,7 +46,7 @@ const TheaterListPage: React.FC = () => {
                 <h3>{theater.name}</h3>
                 <p>{theater.location}</p>
                 <p>상영관 수: {theater.screenCount}개</p>
-                <StyledLink to={`/theaters/${theater.id}`}>상세보기 →</StyledLink>
+                <StyledLink to={`/theaters/${theater.id}`}>상세보기</StyledLink>
               </Card>
             ))}
           </TheaterGrid>
