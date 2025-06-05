@@ -19,6 +19,9 @@ import AdminHome from './pages/AdminHome';
 import MovieListPage from './pages/admin/MovieListPage';
 import MovieEditPage from './pages/admin/MovieEditPage';
 import MovieAddPage from './pages/admin/MovieAddPage';
+import MemberListPage from './pages/admin/MemberListPage';
+import MemberDetailPage from './pages/admin/MemberDetailPage';
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -43,7 +46,8 @@ const App: React.FC = () => {
           <Route path="/admin/movies" element={<MovieListPage />} />
           <Route path="/admin/movies/edit/:id" element={<MovieEditPage />} />
           <Route path="/admin/movies/add" element={<MovieAddPage />} />
-
+          <Route path="/admin/members" element={<MemberListPage />} />  
+          <Route path="/admin/members/detail/:id" element={<MemberDetailPage />} />
         </Routes>
       </AppWrapper>
     </Router>
