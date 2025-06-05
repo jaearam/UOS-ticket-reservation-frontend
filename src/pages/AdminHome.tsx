@@ -9,7 +9,6 @@ const AdminHome: React.FC = () => {
       <Grid>
         <AdminCard to="/admin/movies">🎬 영화 정보 수정</AdminCard>
         <AdminCard to="/admin/members">👥 전체 회원 조회</AdminCard>
-        <AdminCard to="/admin/members/detail">🔍 회원 상세정보</AdminCard>
         <AdminCard to="/admin/guests">📱 비회원 목록</AdminCard>
       </Grid>
     </Wrapper>
@@ -23,13 +22,6 @@ const Wrapper = styled.div`
   max-width: 1000px;
   margin: 0 auto;
   padding: 3rem 1rem;
-`;
-
-const Title = styled.h2`
-  font-size: 2rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: ${({ theme }) => theme.text};
 `;
 
 const Grid = styled.div`
