@@ -20,8 +20,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedToken = localStorage.getItem('accessToken');
     if (storedToken) {
       setToken(storedToken);
+
+      // ✅ 서버에 토큰으로 사용자 정보 요청
+      axios.get('http://localhost:8080/api/members/my', {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      })
+        .then((res) => {
+          setUser(res.data); // 사용자 정보 저장
+        })
+        .catch((err) => {
+          console.error('토큰 인증 실패, 강제 로그아웃 처리');
+          logout(); // ❗ 강제 로그아웃
+        });
     }
   }, []);
+
 
 const login = async (accessToken: string) => {
   setToken(accessToken);

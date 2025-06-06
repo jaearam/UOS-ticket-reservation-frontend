@@ -7,6 +7,23 @@ const GuestLookupPage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [result, setResult] = useState<any | null>(null);
 
+  // 취소 요청 처리
+  const handleCancel = async () => {
+    if (!window.confirm('정말로 예매를 취소하시겠습니까?')) return;
+
+    try {
+      await axios.delete(`http://localhost:8080/api/reservations/${reservationId}`);
+      alert('예매가 취소되었습니다.');
+      setResult(null); // 결과 초기화
+      setReservationId('');
+      setPhone('');
+    } catch (err) {
+      console.error('예매 취소 실패:', err);
+      alert('예매 취소에 실패했습니다.');
+    }
+  };
+
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -18,8 +35,8 @@ const GuestLookupPage: React.FC = () => {
     try {
       const res = await axios.get('http://localhost:8080/api/reservations/non-member/check', {
         params: {
-          reservationId,
-          phoneNumber: Number(phone)
+          reservationId: Number(reservationId),
+          phoneNumber: phone
         }
       });
 
@@ -62,6 +79,8 @@ const GuestLookupPage: React.FC = () => {
           <p><strong>극장:</strong> {result.cinemaName}</p>
           <p><strong>좌석:</strong> {result.seatLabel}</p>
           <p><strong>결제금액:</strong> {result.finalPrice.toLocaleString()}원</p>
+
+          <CancelButton type="button" onClick={handleCancel}>예매 취소</CancelButton>
         </ResultBox>
       )}
     </Wrapper>
@@ -121,4 +140,14 @@ const ResultBox = styled.div`
   p {
     margin: 0.4rem 0;
   }
+`;
+const CancelButton = styled.button`
+  margin-top: 1.2rem;
+  background: #c62828;
+  color: white;
+  border: none;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
 `;

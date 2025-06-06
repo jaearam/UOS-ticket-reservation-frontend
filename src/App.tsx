@@ -21,6 +21,7 @@ import MovieEditPage from './pages/admin/MovieEditPage';
 import MovieAddPage from './pages/admin/MovieAddPage';
 import MemberListPage from './pages/admin/MemberListPage';
 import MemberDetailPage from './pages/admin/MemberDetailPage';
+import GuestListPage from './pages/admin/GuestListPage';
 
 const App: React.FC = () => {
   return (
@@ -48,6 +49,7 @@ const App: React.FC = () => {
           <Route path="/admin/movies/add" element={<MovieAddPage />} />
           <Route path="/admin/members" element={<MemberListPage />} />  
           <Route path="/admin/members/detail/:id" element={<MemberDetailPage />} />
+          <Route path="/admin/guests" element={<GuestListPage />} />
         </Routes>
       </AppWrapper>
     </Router>
