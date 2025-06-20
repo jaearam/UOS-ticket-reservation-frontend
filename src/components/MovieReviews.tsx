@@ -63,6 +63,7 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
       fetchReviews(0);
     } catch (err) {
       console.error('리뷰 등록 실패:', err);
+      alert('리뷰를 쓸 수 없습니다');
     }
   };
 
@@ -96,14 +97,17 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
     <Wrapper>
       <ReviewForm>
         <textarea
+          className="review-textarea"
           value={newReview}
           onChange={(e) => setNewReview(e.target.value)}
           placeholder="리뷰를 입력하세요"
         />
-        <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
-          {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
-        </select>
-        <button onClick={handleSubmit}>등록</button>
+        <div className="side-col">
+          <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
+          </select>
+          <button onClick={handleSubmit}>등록</button>
+        </div>
       </ReviewForm>
 
       {reviews.map((review) => (
@@ -115,16 +119,16 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
 
           {editId === review.id ? (
             <>
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-              />
               <select
                 value={editRating}
                 onChange={(e) => setEditRating(Number(e.target.value))}
               >
                 {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
               </select>
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+              />
               <button onClick={() => handleUpdate(review.id)}>수정 완료</button>
               <button onClick={() => setEditId(null)}>취소</button>
             </>
@@ -166,28 +170,80 @@ const Wrapper = styled.div`
 
 const ReviewForm = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1.2rem;
+  margin-bottom: 0.5rem;
 
-  textarea {
+  .review-textarea {
+    flex: 1 1 0;
+    min-width: 0;
     padding: 0.8rem;
     border-radius: 6px;
     background: #1c1c1c;
     color: white;
+    resize: vertical;
+    font-size: 1rem;
+    height: 90px;
+    box-sizing: border-box;
   }
 
-  select {
-    width: 100px;
+  .side-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    min-width: 120px;
+    max-width: 140px;
+    height: 90px;
+    gap: 0.5rem;
   }
 
-  button {
-    width: 100px;
+  .side-col select {
+    width: 100%;
+    padding: 0.5rem 2.2rem 0.5rem 0.8rem;
+    border-radius: 6px;
+    background: #232323;
+    color: #fff;
+    border: 1.5px solid #333;
+    font-size: 1rem;
+    font-weight: 600;
+    appearance: none;
+    outline: none;
+    position: relative;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23e50914" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1.2rem;
+    transition: border 0.18s;
+  }
+  .side-col select:focus {
+    border: 1.5px solid #e50914;
+    background-color: #292929;
+  }
+  .side-col select:hover {
+    border: 1.5px solid #e50914;
+  }
+
+  .side-col button {
+    width: 100%;
     padding: 0.5rem;
     background: ${({ theme }) => theme.primary};
     border: none;
     color: white;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
+  }
+
+  @media (max-width: 700px) {
+    flex-direction: column;
+    .side-col, .review-textarea {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      height: auto;
+    }
   }
 `;
 
@@ -195,6 +251,41 @@ const ReviewBox = styled.div`
   background: ${({ theme }) => theme.surface};
   padding: 1rem;
   border-radius: 6px;
+
+  select {
+    width: 110px;
+    min-width: 90px;
+    padding: 0.5rem 2.2rem 0.5rem 0.8rem;
+    border-radius: 6px;
+    background: #232323;
+    color: #fff;
+    border: 1.5px solid #333;
+    font-size: 1rem;
+    font-weight: 600;
+    appearance: none;
+    outline: none;
+    position: relative;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23e50914" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1.2rem;
+    transition: border 0.18s;
+    margin-left: 0.2rem;
+  }
+  select:focus {
+    border: 1.5px solid #e50914;
+    background-color: #292929;
+  }
+  select:hover {
+    border: 1.5px solid #e50914;
+  }
+
+  @media (max-width: 600px) {
+    select {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
 `;
 
 const Header = styled.div`

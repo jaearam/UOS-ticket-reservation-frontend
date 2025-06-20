@@ -9,14 +9,20 @@ type Props = {
 
 const MovieCard: React.FC<Props> = ({ movie }) => {
   const navigate = useNavigate();
+  const isDisabled = movie.screeningStatus === 'U' || movie.screeningStatus === 'E';
   return (
-    <Card onClick={() => navigate(`/movie/${movie.id}`)}>
+    <Card>
       <Poster src={movie.image} alt={movie.title} />
       <Overlay>
         <Title>{movie.title}</Title>
         <Genre>{movie.genre}</Genre>
         <Release>{movie.releaseDate}</Release>
-        <ReserveBtn>상세보기</ReserveBtn>
+        <ReserveBtn
+          disabled={isDisabled}
+          onClick={() => {
+            if (!isDisabled) navigate(`/movie/${movie.id}`);
+          }}
+        >상세보기</ReserveBtn>
       </Overlay>
     </Card>
   );
@@ -91,7 +97,14 @@ const ReserveBtn = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
-  &:hover {
+  transition: background 0.18s, color 0.18s, opacity 0.18s;
+  &:hover:enabled {
     background: #c1130a;
+  }
+  &:disabled {
+    background: #aaa;
+    color: #eee;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 `;

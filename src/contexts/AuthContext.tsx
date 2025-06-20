@@ -67,7 +67,9 @@ const login = async (accessToken: string) => {
       console.error('서버 로그아웃 실패:', err);
     } finally {
       setToken(null);
+      setUser(null); // 사용자 정보도 초기화
       localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('accessToken');
     }
   };
 

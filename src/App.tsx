@@ -48,7 +48,7 @@ const App: React.FC = () => {
           <Route path="/admin/movies/edit/:id" element={<MovieEditPage />} />
           <Route path="/admin/movies/add" element={<MovieAddPage />} />
           <Route path="/admin/members" element={<MemberListPage />} />  
-          <Route path="/admin/members/detail/:id" element={<MemberDetailPage />} />
+          <Route path="/admin/members/detail/:userId" element={<MemberDetailPage />} />
           <Route path="/admin/guests" element={<GuestListPage />} />
         </Routes>
       </AppWrapper>

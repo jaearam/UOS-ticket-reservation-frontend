@@ -16,7 +16,8 @@ const MovieListPage: React.FC = () => {
     const fetchMovies = async () => {
     try {
         const res = await axios.get('http://localhost:8080/api/movies', {
-        headers: {
+          params: { page: 0, size: 20 },
+          headers: {
             Authorization: `Bearer ${accessToken}`,
         },
         });
@@ -28,6 +29,10 @@ const MovieListPage: React.FC = () => {
 
   const handleEdit = (id: number) => {
     navigate(`/admin/movies/edit/${id}`);
+  };
+
+  const handleSchedule = (id: number) => {
+    navigate(`/admin/movies/schedule/${id}`);
   };
 
 const handleDelete = async (id: number) => {
@@ -59,6 +64,7 @@ const handleDelete = async (id: number) => {
             <Title>{movie.title}</Title>
             <ButtonRow>
               <EditButton onClick={() => handleEdit(movie.id)}>정보 수정</EditButton>
+              <ScheduleButton onClick={() => handleSchedule(movie.id)}>상영일정조정</ScheduleButton>
               <DeleteButton onClick={() => handleDelete(movie.id)}>삭제</DeleteButton>
             </ButtonRow>
           </MovieCard>
@@ -96,6 +102,7 @@ const MovieCard = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
 `;
 
 const Image = styled.img`
@@ -115,33 +122,62 @@ const Title = styled.h3`
 const ButtonRow = styled.div`
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.9rem;
+  flex-wrap: wrap;
 `;
 
 const EditButton = styled.button`
   flex: 1;
-  padding: 0.5rem;
+  min-width: 90px;
+  max-width: 100%;
+  padding: 0.5rem 0.7rem;
   background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
 
   &:hover {
     background: '#5b5be0';
   }
 `;
 
+const ScheduleButton = styled.button`
+  flex: 1;
+  min-width: 110px;
+  max-width: 100%;
+  padding: 0.5rem 0.7rem;
+  background: #e50914;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
+  transition: background 0.18s;
+
+  &:hover {
+    background: #b0060f;
+  }
+`;
+
 const DeleteButton = styled.button`
   flex: 1;
-  padding: 0.5rem;
+  min-width: 70px;
+  max-width: 100%;
+  padding: 0.5rem 0.7rem;
   background: #b91c1c;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
 
   &:hover {
     background: #991b1b;

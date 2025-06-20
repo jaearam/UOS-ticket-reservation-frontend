@@ -11,7 +11,7 @@ const GuestListPage: React.FC = () => {
 
   const fetchGuests = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/api/nonmembers');
+      const res = await axios.get('http://localhost:8080/api/admin/nonmembers');
       setGuests(res.data);
     } catch (err) {
       console.error('비회원 목록 조회 실패:', err);
