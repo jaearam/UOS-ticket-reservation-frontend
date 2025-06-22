@@ -23,7 +23,7 @@ const AdminMovieEditPage: React.FC = () => {
   useEffect(() => {
     const fetchMovie = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/movies/${id}`);
+        const res = await axios.get(`http://localhost:8080/api/admin/movies/${id}`);
         setMovie(res.data);
         setForm(res.data); // 초기값 세팅
       } catch (err) {
@@ -41,7 +41,7 @@ const AdminMovieEditPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:8080/api/movies/${id}`, form);
+      await axios.put(`http://localhost:8080/api/admin/movies/${id}`, form);
       alert('영화 정보가 수정되었습니다!');
       navigate('/admin/movies');
     } catch (err) {

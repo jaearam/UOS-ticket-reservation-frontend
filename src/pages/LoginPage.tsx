@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
       login(accessToken);
 
       // ✅ userId도 localStorage에 저장
-      localStorage.setItem('userId', member.id);
+      localStorage.setItem('userId', member.userId);
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
       console.log('로그인 응답:', response.data);

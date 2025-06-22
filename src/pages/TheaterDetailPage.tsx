@@ -59,13 +59,21 @@ const TheaterDetailPage: React.FC = () => {
     axios.get(`http://localhost:8080/api/cinemas/${cinemaId}/movies/${selectedMovie.id}/schedules/dates/${date}`, {
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     })
-      .then((res) => setSchedules(res.data.schedules))
+      .then((res) => {
+        // API 응답에 cinemaName이 없으면 현재 페이지의 영화관 정보를 추가
+        const schedulesWithCinema = res.data.schedules.map((schedule: Schedule) => ({
+          ...schedule,
+          cinemaName: schedule.cinemaName || cinema?.name || ''
+        }));
+        setSchedules(schedulesWithCinema);
+      })
       .catch(console.error);
-  }, [cinemaId, selectedMovie, selectedDate]);
+  }, [cinemaId, selectedMovie, selectedDate, cinema]);
 
   const handleDateClick = (date: string) => setSelectedDate(date);
 
   const handleScheduleClick = (schedule: Schedule) => {
+    console.log('TheaterDetailPage - schedule clicked:', schedule);
     navigate(`/reserve/${selectedMovie?.id}`, {
       state: { selectedSchedule: schedule, selectedDate },
     });

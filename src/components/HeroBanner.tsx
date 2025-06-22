@@ -15,10 +15,15 @@ const HeroBanner: React.FC = () => {
 
   return (
     <BannerWrapper>
-      <BannerImage
-        src={banners[index].image}
-        alt={banners[index].alt}
-      />
+      <ImageContainer style={{ transform: `translateX(-${index * 100}%)` }}>
+        {banners.map((banner) => (
+          <BannerImage
+            key={banner.id}
+            src={banner.image}
+            alt={banner.alt}
+          />
+        ))}
+      </ImageContainer>
       <NavButton left onClick={prev}>〈</NavButton>
       <NavButton right onClick={next}>〉</NavButton>
     </BannerWrapper>
@@ -35,7 +40,15 @@ const BannerWrapper = styled.div`
   background: black;
 `;
 
+const ImageContainer = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
+`;
+
 const BannerImage = styled.img`
+  flex-shrink: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

@@ -11,20 +11,20 @@ type Props = {
 };
 
 const MovieDetailTabs: React.FC<Props> = ({ description, movieId, stillImages }) => {
-  const [tab, setTab] = useState<'synopsis' | 'review' | 'stills'>('synopsis');
+  const [tab, setTab] = useState<'synopsis' | 'review' >('synopsis');
 
   return (
     <Wrapper>
       <TabMenu>
         <TabBtn active={tab === 'synopsis'} onClick={() => setTab('synopsis')}>줄거리</TabBtn>
         <TabBtn active={tab === 'review'} onClick={() => setTab('review')}>리뷰</TabBtn>
-        <TabBtn active={tab === 'stills'} onClick={() => setTab('stills')}>스틸컷</TabBtn>
+        {/* <TabBtn active={tab === 'stills'} onClick={() => setTab('stills')}>스틸컷</TabBtn> */}
       </TabMenu>
 
       <Content>
         {tab === 'synopsis' && <MovieSynopsis description={description} />}
         {tab === 'review' && <MovieReviews movieId={movieId} />}
-        {tab === 'stills' && <MovieStills images={stillImages ?? []} />}
+        {/* {tab === 'stills' && <MovieStills images={stillImages ?? []} />} */}
       </Content>
     </Wrapper>
   );

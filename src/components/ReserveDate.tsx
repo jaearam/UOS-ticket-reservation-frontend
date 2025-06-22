@@ -27,7 +27,7 @@ const ReserveDate: React.FC<Props> = ({ movieId, selectedDate, onChange }) => {
       {dates.map((date) => (
         <DateButton
           key={date}
-          selected={date === selectedDate}
+          selected={date === selectedDate?.replace(/-/g, '')}
           onClick={() => onChange(date)}
         >
           {formatDate(date)}

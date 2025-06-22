@@ -118,34 +118,41 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
           </Header>
 
           {editId === review.id ? (
-            <>
-              <select
-                value={editRating}
-                onChange={(e) => setEditRating(Number(e.target.value))}
-              >
-                {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
-              </select>
+            <EditForm>
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
+                placeholder="리뷰 내용을 수정하세요"
               />
-              <button onClick={() => handleUpdate(review.id)}>수정 완료</button>
-              <button onClick={() => setEditId(null)}>취소</button>
-            </>
+              <div className="edit-controls">
+                <select
+                  value={editRating}
+                  onChange={(e) => setEditRating(Number(e.target.value))}
+                >
+                  {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
+                </select>
+                <div className="edit-buttons">
+                  <button className="save-btn" onClick={() => handleUpdate(review.id)}>완료</button>
+                  <button className="cancel-btn" onClick={() => setEditId(null)}>취소</button>
+                </div>
+              </div>
+            </EditForm>
           ) : (
             <>
               <p>{review.content}</p>
-              <p>★ {review.ratingValue}/5</p>
-              {isLoggedIn && review.memberId === Number(localStorage.getItem('userId')) && (
-                <EditRow>
-                  <button onClick={() => {
-                    setEditId(review.id);
-                    setEditContent(review.content);
-                    setEditRating(review.ratingValue);
-                  }}>수정</button>
-                  <button onClick={() => handleDelete(review.id)}>삭제</button>
-                </EditRow>
-              )}
+              <div className="review-footer">
+                <span className="rating">★ {review.ratingValue}/5</span>
+                {isLoggedIn && review.memberUserId === localStorage.getItem('userId') && (
+                  <EditRow>
+                    <button onClick={() => {
+                      setEditId(review.id);
+                      setEditContent(review.content);
+                      setEditRating(review.ratingValue);
+                    }}>수정</button>
+                    <button onClick={() => handleDelete(review.id)}>삭제</button>
+                  </EditRow>
+                )}
+              </div>
             </>
           )}
         </ReviewBox>
@@ -252,6 +259,21 @@ const ReviewBox = styled.div`
   padding: 1rem;
   border-radius: 6px;
 
+  .review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #333;
+  }
+
+  .rating {
+    font-size: 0.9rem;
+    color: #ffd700;
+    font-weight: 600;
+  }
+
   select {
     width: 110px;
     min-width: 90px;
@@ -281,6 +303,12 @@ const ReviewBox = styled.div`
   }
 
   @media (max-width: 600px) {
+    .review-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.8rem;
+    }
+    
     select {
       width: 100%;
       margin-left: 0;
@@ -295,10 +323,196 @@ const Header = styled.div`
   margin-bottom: 0.5rem;
 `;
 
+const EditForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: white;
+    border: 2px solid #333;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    
+    &:focus {
+      border-color: #e50914;
+      background: #1c1c1c;
+      box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1);
+    }
+    
+    &::placeholder {
+      color: #888;
+    }
+  }
+
+  .edit-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .edit-controls select {
+    width: 120px;
+    padding: 0.6rem 2.5rem 0.6rem 1rem;
+    border-radius: 6px;
+    background: #232323;
+    color: #fff;
+    border: 1.5px solid #333;
+    font-size: 0.9rem;
+    font-weight: 600;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23e50914" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1.2rem;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      border-color: #e50914;
+      background-color: #292929;
+    }
+    
+    &:hover {
+      border-color: #e50914;
+    }
+  }
+
+  .edit-buttons {
+    display: flex;
+    gap: 0.8rem;
+  }
+
+  .save-btn, .cancel-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 70px;
+  }
+
+  .save-btn {
+    background: #2d5aa0;
+    color: white;
+    
+    &:hover {
+      background: #1e4a8a;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(45, 90, 160, 0.3);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  .cancel-btn {
+    background: #dc3545;
+    color: white;
+    
+    &:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .edit-controls {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.8rem;
+    }
+    
+    .edit-controls select {
+      width: 100%;
+    }
+    
+    .edit-buttons {
+      justify-content: center;
+    }
+    
+    .save-btn, .cancel-btn {
+      flex: 1;
+      max-width: 120px;
+    }
+  }
+`;
+
 const EditRow = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  
+  button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+    
+    &:first-child {
+      background: #2d5aa0;
+      color: white;
+      
+      &:hover {
+        background: #1e4a8a;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(45, 90, 160, 0.3);
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+    }
+    
+    &:last-child {
+      background: #dc3545;
+      color: white;
+      
+      &:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+  
+  @media (max-width: 600px) {
+    gap: 0.6rem;
+    
+    button {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      min-width: 50px;
+    }
+  }
 `;
 
 const Pagination = styled.div`

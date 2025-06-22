@@ -37,7 +37,8 @@ const MemberDetailPage: React.FC = () => {
         <p><strong>이메일:</strong> {member.email}</p>
         <p><strong>전화번호:</strong> {member.phoneNumber}</p>
         <p><strong>생년월일:</strong> {member.birthDate}</p>
-        {/* <p><strong>보유 포인트:</strong> {member.point.toLocaleString()}P</p> */}
+        <p><strong>등급:</strong> {member.gradeText}</p>
+        <p><strong>보유 포인트:</strong> {member.availablePoints.toLocaleString()}P</p>
       </InfoBox>
     </Wrapper>
   );
@@ -47,7 +48,6 @@ export default MemberDetailPage;
 
 const Wrapper = styled.div`
   min-height: 100vh;
-  background: #181818;
   max-width: 600px;
   margin: 0 auto;
   padding: 3rem 1.5rem 2rem 1.5rem;

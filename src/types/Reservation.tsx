@@ -8,15 +8,18 @@ export interface Reservation {
   seatLabel: string;
   seatGradeName: string;
   status: string;
+  reservationTime: string;
   basePrice: number;
   discountAmount: number;
   finalPrice: number;
-  paymentId: string;
+  paymentId: string | null;
   paymentStatus: string;
   ticketIssuanceStatus: string;
-  memberId: number;
+  memberUserId: string | null;
   userName: string;
   phoneNumber: string;
   screeningDate: string;
   screeningStartTime: string;
+  completed: boolean;
+  ticketIssuanceStatusText: string;
 }

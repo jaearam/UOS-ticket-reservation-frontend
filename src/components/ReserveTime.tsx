@@ -15,39 +15,39 @@ const ReserveTime: React.FC<Props> = ({ movieId, selectedDate, selectedSchedule,
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedCinema, setSelectedCinema] = useState('');
   const [selectedScreen, setSelectedScreen] = useState('');
-  const [cinemaList, setCinemaList] = useState<string[]>([]);
-  const [screenList, setScreenList] = useState<string[]>([]);
 
+  // 외부에서 selectedSchedule이 변경되면, 내부 선택 상태도 업데이트
+  useEffect(() => {
+    if (selectedSchedule) {
+      console.log('ReserveTime - selectedSchedule received:', selectedSchedule);
+      setSelectedCinema(selectedSchedule.cinemaName);
+      setSelectedScreen(selectedSchedule.screenName);
+    }
+  }, [selectedSchedule]);
+
+  // 날짜가 변경되면 스케줄 목록을 다시 불러옴
   useEffect(() => {
     if (!selectedDate) return;
     const fetchSchedules = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/reservations/movies/${movieId}/dates/${selectedDate}`);
-        setSchedules(res.data.schedules);
-        const uniqueCinemas = Array.from(
-          new Set<string>(res.data.schedules.map((s: Schedule) => s.cinemaName))
-        ).sort();
-        setCinemaList(uniqueCinemas);
-        setSelectedCinema(uniqueCinemas[0]);
+        const dateParam = selectedDate.replace(/-/g, '');
+        const res = await axios.get(`http://localhost:8080/api/reservations/movies/${movieId}/dates/${dateParam}`);
+        setSchedules(res.data.schedules || []);
       } catch (err) {
+        setSchedules([]);
         console.error('스케줄 조회 실패:', err);
       }
     };
     fetchSchedules();
   }, [movieId, selectedDate]);
 
-  useEffect(() => {
-    const filteredScreens = schedules
-      .filter((s) => s.cinemaName === selectedCinema)
-      .map((s) => s.screenName);
-    const uniqueScreens = Array.from(new Set(filteredScreens)).sort();
-    setScreenList(uniqueScreens);
-    setSelectedScreen(uniqueScreens[0]);
-  }, [selectedCinema, schedules]);
-
-  const handleSelect = (schedule: Schedule) => {
-    onSelectSchedule(schedule);
-  };
+  const cinemaList = Array.from(new Set(schedules.map(s => s.cinemaName))).sort();
+  
+  const screenList = Array.from(new Set(
+    schedules
+      .filter(s => s.cinemaName === selectedCinema)
+      .map(s => s.screenName)
+  )).sort();
 
   const filteredSchedules = schedules.filter(
     (s) => s.cinemaName === selectedCinema && s.screenName === selectedScreen
@@ -87,7 +87,7 @@ const ReserveTime: React.FC<Props> = ({ movieId, selectedDate, selectedSchedule,
           <TimeButton
             key={s.id}
             selected={selectedSchedule?.id === s.id}
-            onClick={() => handleSelect(s)}
+            onClick={() => onSelectSchedule(s)}
           >
             {new Date(s.screeningStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </TimeButton>

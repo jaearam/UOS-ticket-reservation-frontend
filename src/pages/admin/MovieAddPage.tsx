@@ -33,7 +33,7 @@ const MovieAddPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:8080/api/movies', form);
+      await axios.post('http://localhost:8080/api/admin/movies', form);
       alert('영화가 등록되었습니다.');
       navigate('/admin/movies');
     } catch (err: any) {

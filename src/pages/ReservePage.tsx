@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ReserveDate from '../components/ReserveDate';
 import ReserveTime from '../components/ReserveTime';
 import ReserveSeat from '../components/ReserveSeat';
@@ -14,13 +14,16 @@ console.log('Authentication token', localStorage.getItem('accessToken'));
 const ReservePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const { selectedSchedule: scheduleFromState, selectedDate: dateFromState } = location.state || {};
   
   const movieId = Number(id);
   const accessToken = localStorage.getItem('accessToken');
   const isLoggedIn = !!accessToken;
 
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [selectedDate, setSelectedDate] = useState(dateFromState || '');
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(scheduleFromState || null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -52,50 +55,62 @@ const ReservePage: React.FC = () => {
 
 
 const handleReserve = async () => {
-
-  
   if (!selectedSchedule || selectedSeats.length === 0) {
     alert('좌석을 선택해주세요.');
     return;
   }
-  
-  if (selectedSeats.length > 1) {
-    alert('현재는 하나의 좌석만 선택할 수 있습니다.');
-    return;
-  }
-  
+
   if (!isLoggedIn && !phoneNumber.trim()) {
     return alert('로그인하거나 전화번호를 입력해주세요.');
   }
 
-  const selectedSeatNumber = selectedSeats[0];
-  console.log('선택한 좌석:', selectedSeatNumber);
-  console.log('선택한 스케줄:', selectedSchedule);
-  const selectedSeat = seats.find((s) => s.seatLabel === selectedSeatNumber);
-  if (!selectedSeat) {
+  const selectedSeatObjects = selectedSeats
+    .map(seatLabel => seats.find(s => s.seatLabel === seatLabel))
+    .filter((s): s is Seat => !!s);
+
+  if (selectedSeatObjects.length !== selectedSeats.length) {
     alert('선택한 좌석 정보를 찾을 수 없습니다.');
     return;
   }
 
+  const seatIds = selectedSeatObjects.map(s => s.id);
+
   const payload = {
     scheduleId: Number(selectedSchedule.id),
-    seatId: Number(selectedSeat.id),
-    phoneNumber: isLoggedIn ? undefined : phoneNumber, // 비회원만 전송
+    seatIds: seatIds,
+    phoneNumber: isLoggedIn ? undefined : phoneNumber,
   };
 
   try {
-    console.log('예매 요청 데이터:', payload);
-    const response = await axios.post('http://localhost:8080/api/reservations/create', payload,
-    {
+    const response = await axios.post('http://localhost:8080/api/reservations/create', payload, {
       headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
-    }
-    );
+    });
 
-    const reservationId = response.data.reservationId;
-    console.log('예매 성공:', reservationId);
+    console.log('--- 예매 생성 API 응답 데이터 --- :', response.data);
+
+    const reservationIds = response.data.reservationIds;
+    const reservationId = reservationIds && reservationIds[0];
+
+    if (!reservationId) {
+      alert('예매 ID를 받아오지 못했습니다. API 응답을 확인해주세요.');
+      console.error('API 응답에 reservationIds가 없거나 비어있습니다:', response.data);
+      return;
+    }
+
+    const reservationDetails = {
+      movieTitle: selectedSchedule.movieTitle,
+      cinemaName: selectedSchedule.cinemaName,
+      screenName: selectedSchedule.screenName,
+      screeningDate: selectedSchedule.screeningDate,
+      screeningStartTime: selectedSchedule.screeningStartTime,
+      seatLabels: selectedSeats,
+    };
+
     navigate('/payment', {
       state: {
         reservationId,
+        reservationIds,
+        reservationDetails,
       },
     });
   } catch (error) {
