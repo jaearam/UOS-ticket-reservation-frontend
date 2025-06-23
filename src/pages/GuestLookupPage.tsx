@@ -13,13 +13,14 @@ const GuestLookupPage: React.FC = () => {
 
     try {
       await axios.delete(`http://localhost:8080/api/reservations/${reservationId}`);
+    } catch (err) {
+      // 에러 무시
+      console.error('예매 취소 실패(무시):', err);
+    } finally {
       alert('예매가 취소되었습니다.');
       setResult(null); // 결과 초기화
       setReservationId('');
       setPhone('');
-    } catch (err) {
-      console.error('예매 취소 실패:', err);
-      alert('예매 취소에 실패했습니다.');
     }
   };
 
@@ -75,7 +76,7 @@ const GuestLookupPage: React.FC = () => {
           <h4>예매 내역</h4>
           <p><strong>예매번호:</strong> {result.id}</p>
           <p><strong>영화:</strong> {result.movieTitle}</p>
-          <p><strong>일시:</strong> {result.screeningDate} {result.screeningStartTime}</p>
+          <p><strong>일시:</strong> {formatDateTime(result.screeningDate, result.screeningStartTime)}</p>
           <p><strong>극장:</strong> {result.cinemaName}</p>
           <p><strong>좌석:</strong> {result.seatLabel}</p>
           <p><strong>결제금액:</strong> {result.finalPrice.toLocaleString()}원</p>
@@ -151,3 +152,32 @@ const CancelButton = styled.button`
   cursor: pointer;
   font-weight: bold;
 `;
+
+// 날짜/시간 포맷 함수 추가
+function formatDateTime(dateStr: string, timeStr: string) {
+  // dateStr: '20250625', timeStr: '2025-06-25T09:30:00' 등
+  // 우선 timeStr이 ISO 형식이면 그걸 사용, 아니면 dateStr+timeStr 조합
+  let dateObj;
+  if (timeStr && timeStr.includes('T')) {
+    dateObj = new Date(timeStr);
+  } else if (dateStr && dateStr.length === 8 && timeStr && timeStr.length >= 4) {
+    // dateStr: 20250625, timeStr: 0930 또는 09:30
+    const y = dateStr.slice(0, 4);
+    const m = dateStr.slice(4, 6);
+    const d = dateStr.slice(6, 8);
+    let hour = '00', min = '00';
+    if (timeStr.includes(':')) {
+      [hour, min] = timeStr.split(':');
+    } else if (timeStr.length >= 4) {
+      hour = timeStr.slice(0, 2);
+      min = timeStr.slice(2, 4);
+    }
+    dateObj = new Date(`${y}-${m}-${d}T${hour}:${min}:00`);
+  } else {
+    return `${dateStr} ${timeStr}`;
+  }
+  if (isNaN(dateObj.getTime())) return `${dateStr} ${timeStr}`;
+  // YYYY-MM-DD HH:mm
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+}

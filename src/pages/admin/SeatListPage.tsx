@@ -27,11 +27,22 @@ interface SeatGrade {
 }
 
 const SEAT_GRADES_DATA: SeatGrade[] = [
-  { id: 'GENERAL', name: '일반석', price: 12000 },
-  { id: 'PREMIUM', name: '프리미엄', price: 15000 },
-  { id: 'VIP', name: 'VIP석', price: 18000 },
-  { id: 'COUPLE', name: '커플석', price: 28000 },
+  { id: 'A', name: '일반석', price: 12000 },
+  { id: 'B', name: '프리미엄', price: 15000 },
+  { id: 'C', name: '커플석', price: 28000 },
+  { id: 'D', name: 'VIP석', price: 18000 },
 ];
+
+const gradeIdMap: { [key: string]: string } = {
+  'GENERAL': 'A',
+  'PREMIUM': 'B',
+  'COUPLE': 'C',
+  'VIP': 'D',
+  'A': 'A',
+  'B': 'B',
+  'C': 'C',
+  'D': 'D',
+};
 
 const SeatListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -103,14 +114,22 @@ const SeatListPage: React.FC = () => {
       alert('모든 항목을 입력하세요.');
       return;
     }
+    const payload = {
+      id: form.id,
+      seatGradeId: form.seatGradeId,
+      row: form.row,
+      column: form.column,
+      screenId: form.screenId,
+    };
+    console.log('좌석 등록/수정 요청 데이터:', payload);
     const accessToken = localStorage.getItem('accessToken');
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
     try {
       if (editId) {
-        await axios.put(`http://localhost:8080/api/admin/seats/${editId}`, form, { headers });
+        await axios.put(`http://localhost:8080/api/admin/seats/${editId}`, payload, { headers });
         alert('좌석이 수정되었습니다.');
       } else {
-        await axios.post('http://localhost:8080/api/admin/seats', form, { headers });
+        await axios.post('http://localhost:8080/api/admin/seats', payload, { headers });
         alert('좌석이 등록되었습니다.');
       }
       setShowModal(false);
@@ -145,7 +164,13 @@ const SeatListPage: React.FC = () => {
 
   // 수정 버튼 클릭
   const handleEdit = (seat: Seat) => {
-    setForm(seat);
+    setForm({
+      id: seat.id,
+      seatGradeId: gradeIdMap[seat.seatGradeId] || 'A',
+      row: seat.row,
+      column: seat.column,
+      screenId: seat.screenId,
+    });
     setEditId(seat.id);
     setShowModal(true);
   };

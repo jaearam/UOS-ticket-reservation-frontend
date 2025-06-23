@@ -54,8 +54,6 @@ const LoginPage: React.FC = () => {
         <Button type="submit">로그인</Button>
 
         <Links>
-          <StyledLink to="#">아이디 찾기</StyledLink>
-          <StyledLink to="#">비밀번호 찾기</StyledLink>
           <StyledLink to="/register">회원가입</StyledLink>
         </Links>
       </Form>

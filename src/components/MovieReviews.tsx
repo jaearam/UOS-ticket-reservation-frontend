@@ -16,6 +16,20 @@ interface Props {
   movieId: number;
 }
 
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const TextAreaWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  min-width: 320px;
+  flex: 1 1 0;
+  display: flex;
+`;
+
 const MovieReviews: React.FC<Props> = ({ movieId }) => {
   const { token, isLoggedIn } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -96,12 +110,18 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
   return (
     <Wrapper>
       <ReviewForm>
-        <textarea
-          className="review-textarea"
-          value={newReview}
-          onChange={(e) => setNewReview(e.target.value)}
-          placeholder="리뷰를 입력하세요"
-        />
+        <TextAreaWrapper>
+          <textarea
+            className="review-textarea"
+            value={newReview}
+            onChange={(e) => {
+              if (e.target.value.length <= 50) setNewReview(e.target.value);
+            }}
+            placeholder="리뷰를 입력하세요 (최대 50자)"
+            maxLength={50}
+          />
+          <CharCountInTextarea>{newReview.length} / 50자</CharCountInTextarea>
+        </TextAreaWrapper>
         <div className="side-col">
           <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
             {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}점</option>)}
@@ -169,10 +189,14 @@ const MovieReviews: React.FC<Props> = ({ movieId }) => {
 
 export default MovieReviews;
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+const CharCountInTextarea = styled.div`
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 0.92rem;
+  color: #aaa;
+  background: transparent;
+  pointer-events: none;
 `;
 
 const ReviewForm = styled.div`

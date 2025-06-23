@@ -17,8 +17,6 @@ import EditProfilePage from './pages/EditProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
 import AdminHome from './pages/AdminHome';
 import MovieListPage from './pages/admin/MovieListPage';
-import MovieEditPage from './pages/admin/MovieEditPage';
-import MovieAddPage from './pages/admin/MovieAddPage';
 import MemberListPage from './pages/admin/MemberListPage';
 import MemberDetailPage from './pages/admin/MemberDetailPage';
 import GuestListPage from './pages/admin/GuestListPage';
@@ -52,8 +50,6 @@ const App: React.FC = () => {
 
           <Route path="/admin" element={<AdminHome />} />
           <Route path="/admin/movies" element={<MovieListPage />} />
-          <Route path="/admin/movies/edit/:id" element={<MovieEditPage />} />
-          <Route path="/admin/movies/add" element={<MovieAddPage />} />
           <Route path="/admin/members" element={<MemberListPage />} />  
           <Route path="/admin/members/detail/:userId" element={<MemberDetailPage />} />
           <Route path="/admin/guests" element={<GuestListPage />} />

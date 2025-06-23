@@ -17,14 +17,24 @@ interface Movie {
   description: string;
   viewingGrade: string;
   viewingGradeText: string;
+  status: string;
   [key: string]: any; 
+}
+
+// 등급 텍스트 변환 함수
+function getViewingGradeText(grade: string) {
+  if (grade === 'ALL' || grade === '전체') return '전체관람가';
+  if (grade === '12') return '12세 이상 관람가';
+  if (grade === '15') return '15세 이상 관람가';
+  if (grade === '18') return '청소년 관람불가';
+  return grade;
 }
 
 const MovieListPage: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<Partial<Movie>>({});
+  const [form, setForm] = useState<Partial<Movie>>({ status: 'D' });
   const [editId, setEditId] = useState<number | null>(null);
 
   // 영화 목록 불러오기
@@ -57,24 +67,28 @@ const MovieListPage: React.FC = () => {
   // 등록/수정 폼 제출
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || !form.directorName || !form.genre || !form.runtime || !form.releaseDate || !form.viewingGrade) {
+    console.log(form);
+    // API 명세에 맞는 필수값 체크
+    if (!form.title || !form.directorName || !form.genre || !form.runtime || !form.releaseDate || !form.viewingGrade || !form.status) {
       alert('필수 항목을 모두 입력하세요.');
       return;
     }
     const accessToken = localStorage.getItem('accessToken');
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
     
+    // API 명세에 맞는 필드명으로 맞춤
     const submissionData = {
-        title: form.title,
-        directorName: form.directorName,
-        actorName: form.actorName || '',
-        distributorName: form.distributorName || '',
-        genre: form.genre,
-        runtime: form.runtime,
-        releaseDate: form.releaseDate?.replace(/-/g, ''),
-        description: form.description,
-        viewingGrade: form.viewingGrade,
-        image: form.image
+      title: form.title,
+      genre: form.genre,
+      releaseDate: form.releaseDate.replace(/-/g, ''), // YYYYMMDD
+      screeningStatus: form.status, // status -> screeningStatus
+      runtime: Number(form.runtime),
+      actorName: form.actorName || '',
+      directorName: form.directorName,
+      distributorName: form.distributorName || '',
+      viewingGrade: form.viewingGrade,
+      description: form.description || '',
+      image: form.image || ''
     };
 
     try {
@@ -86,7 +100,7 @@ const MovieListPage: React.FC = () => {
         alert('영화가 등록되었습니다.');
       }
       setShowModal(false);
-      setForm({});
+      setForm({ status: 'D' });
       setEditId(null);
       fetchMovies();
     } catch (e: any) {
@@ -117,7 +131,8 @@ const MovieListPage: React.FC = () => {
     setForm({ 
       ...movie, 
       releaseDate: formattedDate,
-      viewingGrade: movie.viewingGrade
+      viewingGrade: movie.viewingGrade,
+      status: movie.status || 'D',
     });
     setEditId(movie.id);
     setShowModal(true);
@@ -126,7 +141,7 @@ const MovieListPage: React.FC = () => {
   // 모달 닫기
   const handleCloseModal = () => {
     setShowModal(false);
-    setForm({});
+    setForm({ status: 'D' });
     setEditId(null);
   };
 
@@ -134,7 +149,7 @@ const MovieListPage: React.FC = () => {
     <Container>
       <h2>영화 관리</h2>
       
-      <Button onClick={() => { setShowModal(true); setForm({}); setEditId(null); }}>+ 영화 등록</Button>
+      <Button onClick={() => { setShowModal(true); setForm({ status: 'D' }); setEditId(null); }}>+ 영화 등록</Button>
       
       {isLoading ? (
         <LoadingText>로딩 중...</LoadingText>
@@ -169,14 +184,11 @@ const MovieListPage: React.FC = () => {
                   <td><GenreBadge>{movie.genre}</GenreBadge></td>
                   <td><RunningTime>{movie.runtime}분</RunningTime></td>
                   <td><ReleaseDate>{movie.releaseDate}</ReleaseDate></td>
-                  <td><RatingBadge rating={movie.viewingGradeText}>{movie.viewingGradeText}</RatingBadge></td>
+                  <td><RatingBadge rating={getViewingGradeText(movie.viewingGrade)}>{getViewingGradeText(movie.viewingGrade)}</RatingBadge></td>
                   <td>
                     <ButtonGroup>
                       <ActionButton onClick={() => handleEdit(movie)}>수정</ActionButton>
                       <ActionButton danger onClick={() => handleDelete(movie.id)}>삭제</ActionButton>
-                      <Link to={`/admin/movies/${movie.id}/edit`}>
-                        <ActionButton>상세수정</ActionButton>
-                      </Link>
                     </ButtonGroup>
                   </td>
                 </tr>
@@ -251,7 +263,15 @@ const MovieListPage: React.FC = () => {
                   <option value="ALL">전체관람가</option>
                   <option value="12">12세관람가</option>
                   <option value="15">15세관람가</option>
-                  <option value="19">19세관람가</option>
+                  <option value="18">18세관람가</option>
+                </select>
+              </FormGroup>
+              <FormGroup>
+                <label>상영상태</label>
+                <select value={form.status || 'D'} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} required>
+                  <option value="D">상영중</option>
+                  <option value="U">상영예정</option>
+                  <option value="E">상영종료</option>
                 </select>
               </FormGroup>
               <FormGroup>
@@ -377,10 +397,10 @@ const ReleaseDate = styled.span``;
 const RatingBadge = styled.span<{ rating?: string }>`
   font-weight: 600;
   color: ${({ rating }) => {
-    if (rating?.includes('15')) return '#f5c518';
-    if (rating?.includes('12')) return '#28a745';
-    if (rating?.includes('전체')) return '#007bff';
-    if (rating?.includes('19')) return '#dc3545';
+    if (rating === '15세 이상 관람가') return '#f5c518';
+    if (rating === '12세 이상 관람가') return '#28a745';
+    if (rating === '전체관람가') return '#007bff';
+    if (rating === '청소년 관람불가') return '#dc3545';
     return '#ccc';
   }};
 `;
