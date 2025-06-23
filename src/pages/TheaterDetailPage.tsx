@@ -50,7 +50,7 @@ const TheaterDetailPage: React.FC = () => {
       .then((res) => setMovies(res.data.movies))
       .catch(console.error);
   }, [cinemaId]);
-
+console.log(movies);
   useEffect(() => {
     if (!selectedMovie || !selectedDate) return;
     const accessToken = localStorage.getItem('accessToken');
