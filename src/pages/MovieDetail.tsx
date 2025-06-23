@@ -25,6 +25,15 @@ interface MovieDetailDto {
   viewingGradeText: string;
 }
 
+function formatDate(dateStr: string) {
+  if (!dateStr) return '';
+  if (dateStr.length === 8) {
+    return `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+  }
+  if (dateStr.length === 10 && dateStr.includes('-')) return dateStr;
+  return dateStr;
+}
+
 const MovieDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -50,7 +59,7 @@ const MovieDetail: React.FC = () => {
         id={movie.id}
         title={movie.title}
         genre={movie.genre}
-        releaseDate={movie.releaseDate}
+        releaseDate={formatDate(movie.releaseDate)}
         description={movie.description}
         viewingGrade={movie.viewingGradeText}
         rating={movie.rating}

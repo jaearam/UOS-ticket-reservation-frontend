@@ -15,6 +15,7 @@ const Home: React.FC = () => {
 useEffect(() => {
   if (query.trim() === '') {
     setSearchResults([]);
+    console.log(searchResults);
   }
 }, [query]);
 
@@ -39,7 +40,6 @@ useEffect(() => {
   };
 
 
-
   return (
     <PageWrapper>
       <HeroBanner />
@@ -50,7 +50,6 @@ useEffect(() => {
           onSubmit={handleSearch}
         />
       </SearchWrapper>
-
       {searchResults.length > 0 && (
       <Section>
         <SectionTitle>🔍 검색 결과</SectionTitle>

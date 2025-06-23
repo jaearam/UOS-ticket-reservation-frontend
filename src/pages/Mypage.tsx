@@ -79,7 +79,11 @@ const TransferModal = ({ open, onClose, reservationId, fetchData }: { open: bool
       onClose();
       fetchData();
     } catch (err: any) {
-      alert('티켓 전달 실패: ' + (err.response?.data?.message || '알 수 없는 오류'));
+      if (err.response?.status === 499) {
+        alert('마지막 남은 티켓은 전달할 수 없습니다');
+      } else {
+        alert('티켓 전달 실패: ' + (err.response?.data?.message || '알 수 없는 오류'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -179,6 +183,22 @@ const Mypage: React.FC = () => {
 
   if (!member) return <Wrapper>로딩 중...</Wrapper>;
 
+  // 전화번호 하이픈 포맷 함수
+  function formatPhone(phone: string) {
+    if (!phone) return '';
+    const onlyNumber = phone.replace(/[^0-9]/g, '');
+    if (onlyNumber.length === 11)
+      return onlyNumber.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    if (onlyNumber.length === 10)
+      return onlyNumber.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+    return phone;
+  }
+  // 생년월일 YYYY년 MM월 DD일 포맷 함수
+  function formatBirth(birth: string) {
+    if (!birth || birth.length !== 8) return birth;
+    return `${birth.slice(0,4)}년 ${birth.slice(4,6)}월 ${birth.slice(6,8)}일`;
+  }
+
   return (
     <Wrapper>
       <Title>마이페이지</Title>
@@ -187,8 +207,8 @@ const Mypage: React.FC = () => {
         <h3>👤 개인정보</h3>
         <p><strong>아이디:</strong> {member.userId}</p>
         <p><strong>이메일:</strong> {member.email}</p>
-        <p><strong>전화번호:</strong> {member.phoneNumber}</p>
-        <p><strong>생년월일:</strong> {member.birthDate}</p>
+        <p><strong>전화번호:</strong> {formatPhone(member.phoneNumber)}</p>
+        <p><strong>생년월일:</strong> {formatBirth(member.birthDate)}</p>
         <p><strong>포인트:</strong> {member.availablePoints.toLocaleString()} P</p>
         <ActionRow>
           <Btn onClick={() => navigate('/edit-profile')}>정보 수정</Btn>
@@ -241,6 +261,8 @@ const Mypage: React.FC = () => {
           ) {
             alert('예매가 취소되었습니다.');
             setReservations((prev) => prev.filter((res) => res.id !== r.id));
+          } else if (err.response?.status === 499) {
+            alert('전달받은 티켓은 취소할 수 없습니다. 예매자에게 취소를 요청해주세요.');
           } else {
             console.error('예매 취소 실패:', err);
             console.error('서버 응답 메시지:', msg);

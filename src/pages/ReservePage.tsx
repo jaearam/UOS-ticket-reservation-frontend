@@ -27,6 +27,7 @@ const ReservePage: React.FC = () => {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [displayPhone, setDisplayPhone] = useState('');
 
   useEffect(() => {
   // 날짜나 스케줄이 바뀌면 선택 좌석 초기화
@@ -53,6 +54,19 @@ const ReservePage: React.FC = () => {
       );
     };
 
+  // 전화번호 입력 핸들러
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const onlyNumber = value.replace(/[^0-9]/g, '');
+    let formatted = onlyNumber;
+    if (onlyNumber.length > 3 && onlyNumber.length <= 7) {
+      formatted = onlyNumber.slice(0, 3) + '-' + onlyNumber.slice(3);
+    } else if (onlyNumber.length > 7) {
+      formatted = onlyNumber.slice(0, 3) + '-' + onlyNumber.slice(3, 7) + '-' + onlyNumber.slice(7, 11);
+    }
+    setPhoneNumber(onlyNumber);
+    setDisplayPhone(formatted);
+  };
 
 const handleReserve = async () => {
   if (!selectedSchedule || selectedSeats.length === 0) {
@@ -162,9 +176,9 @@ const handleReserve = async () => {
           <label>전화번호 (비회원 예매 전용)</label>
           <input
             type="text"
-            placeholder="01012345678"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="010-1234-5678"
+            value={displayPhone}
+            onChange={handlePhoneChange}
           />
         </InputGroup>
       </Section>
@@ -177,8 +191,6 @@ const handleReserve = async () => {
     </Wrapper>
   );
 };
-
-export default ReservePage;
 
 const Wrapper = styled.div`
   max-width: 1000px;
@@ -236,3 +248,5 @@ const InputGroup = styled.div`
     }
   }
 `;
+
+export default ReservePage;

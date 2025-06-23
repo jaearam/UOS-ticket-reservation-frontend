@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const GuestLookupPage: React.FC = () => {
   const [reservationId, setReservationId] = useState('');
   const [phone, setPhone] = useState('');
   const [result, setResult] = useState<any | null>(null);
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
+  const [issuedReservation, setIssuedReservation] = useState<any | null>(null);
+  const navigate = useNavigate();
 
   // 취소 요청 처리
   const handleCancel = async () => {
@@ -48,6 +52,20 @@ const GuestLookupPage: React.FC = () => {
     }
   };
 
+  // 티켓 발급/출력 핸들러
+  const handleIssueTicket = async () => {
+    if (!result) return;
+    try {
+      await axios.post(`http://localhost:8080/api/reservations/${result.id}/issue`);
+      setIssuedReservation(result);
+      setTicketModalOpen(true);
+      // 티켓 발급 상태를 즉시 반영
+      setResult({ ...result, ticketIssuanceStatus: 'Y' });
+    } catch (err) {
+      alert('티켓 발급에 실패했습니다.');
+    }
+  };
+
   return (
     <Wrapper>
       <Title>비회원 예매 확인</Title>
@@ -58,7 +76,7 @@ const GuestLookupPage: React.FC = () => {
           id="reservationId"
           value={reservationId}
           onChange={(e) => setReservationId(e.target.value)}
-          placeholder="예: R202405179001"
+          placeholder="예: 202405179001"
         />
 
         <label htmlFor="phone">전화번호</label>
@@ -66,7 +84,7 @@ const GuestLookupPage: React.FC = () => {
           id="phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="01012345678"
+          placeholder="010-1234-5678"
         />
         <Btn type="submit">예매 내역 조회</Btn>
       </Form>
@@ -80,10 +98,22 @@ const GuestLookupPage: React.FC = () => {
           <p><strong>극장:</strong> {result.cinemaName}</p>
           <p><strong>좌석:</strong> {result.seatLabel}</p>
           <p><strong>결제금액:</strong> {result.finalPrice.toLocaleString()}원</p>
-
-          <CancelButton type="button" onClick={handleCancel}>예매 취소</CancelButton>
+          <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1.2rem' }}>
+            <CancelButton type="button" onClick={handleCancel}>예매 취소</CancelButton>
+            {result.paymentStatus !== 'Y' && (
+              <ActionBtn type="button" onClick={() => navigate('/payment', { state: { reservationId: result.id } })}>
+                결제하기
+              </ActionBtn>
+            )}
+            {result.paymentStatus === 'Y' && (
+              <ActionBtn type="button" onClick={handleIssueTicket} disabled={result.ticketIssuanceStatus === 'Y'}>
+                {result.ticketIssuanceStatus === 'Y' ? '티켓 출력 완료' : '티켓 출력'}
+              </ActionBtn>
+            )}
+          </div>
         </ResultBox>
       )}
+      <TicketModal open={ticketModalOpen} onClose={() => setTicketModalOpen(false)} reservation={issuedReservation} />
     </Wrapper>
   );
 };
@@ -148,6 +178,91 @@ const CancelButton = styled.button`
   color: white;
   border: none;
   padding: 0.8rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+`;
+
+const ActionBtn = styled.button`
+  margin-top: 1.2rem;
+  background: ${({ theme }) => theme.primary};
+  color: white;
+  border: none;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+`;
+
+// TicketModal 컴포넌트 추가 (Mypage.tsx 참고, 스타일 단순화)
+const TicketModal = ({ open, onClose, reservation }: { open: boolean; onClose: () => void; reservation: any | null }) => {
+  if (!open || !reservation) return null;
+  const [date, time] = reservation.screeningStartTime.split('T');
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <TicketCard>
+          <h2>🎟️ 티켓 정보</h2>
+          <InfoGrid>
+            <InfoRow><strong>예매번호</strong><span>{reservation.id}</span></InfoRow>
+            <InfoRow><strong>영화</strong><span>{reservation.movieTitle}</span></InfoRow>
+            <InfoRow><strong>일시</strong><span>{date} {time.slice(0, 5)}</span></InfoRow>
+            <InfoRow><strong>극장</strong><span>{reservation.cinemaName} / {reservation.screenName}</span></InfoRow>
+            <InfoRow><strong>좌석</strong><span>{reservation.seatLabel}</span></InfoRow>
+            <InfoRow><strong>결제금액</strong><span>{reservation.finalPrice.toLocaleString()}원</span></InfoRow>
+          </InfoGrid>
+          <CloseBtn onClick={onClose}>닫기</CloseBtn>
+        </TicketCard>
+      </ModalContent>
+    </ModalOverlay>
+  );
+};
+
+// TicketModal 스타일
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+const ModalContent = styled.div`
+  background: #222;
+  padding: 2rem;
+  border-radius: 10px;
+  min-width: 320px;
+  color: #fff;
+  position: relative;
+`;
+const TicketCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+const InfoGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 1rem 0 2rem 0;
+  align-items: center;
+`;
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 320px;
+`;
+const CloseBtn = styled.button`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #444;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;

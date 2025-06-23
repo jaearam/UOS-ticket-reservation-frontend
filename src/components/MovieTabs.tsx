@@ -23,7 +23,7 @@ export interface Movie {
 
 
 const MovieTabs: React.FC = () => {
-  const [tab, setTab] = useState<'D' | 'U' | 'E'>('D');
+  const [tab, setTab] = useState<'Y' | 'N' | 'D'>('Y');
   const [movies, setMovies] = useState<Movie[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +34,7 @@ const MovieTabs: React.FC = () => {
           params: { status: tab, page: 0, size: 20 },
         });
         setMovies(res.data.content);
+        console.log(res.data.content);
       } catch (err) {
         console.error('영화 목록 불러오기 실패:', err);
       }
@@ -51,9 +52,9 @@ const MovieTabs: React.FC = () => {
   return (
     <Wrapper>
       <TabHeader>
-        <TabButton active={tab === 'D'} onClick={() => setTab('D')}>현재 상영작</TabButton>
-        <TabButton active={tab === 'U'} onClick={() => setTab('U')}>상영 예정작</TabButton>
-        <TabButton active={tab === 'E'} onClick={() => setTab('E')}>상영 종료작</TabButton>
+        <TabButton active={tab === 'Y'} onClick={() => setTab('Y')}>현재 상영작</TabButton>
+        <TabButton active={tab === 'N'} onClick={() => setTab('N')}>상영 예정작</TabButton>
+        <TabButton active={tab === 'D'} onClick={() => setTab('D')}>상영 종료작</TabButton>
       </TabHeader>
 
       <ScrollContainer>

@@ -4,6 +4,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Reservation } from '../types/Reservation';
 
+const SmallText = styled.p`
+  font-size: 0.92rem;
+  color: #aaa;
+  margin: 0 0 1.2rem 0;
+  text-align: right;
+`;
+
 const PaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,6 +25,7 @@ const PaymentPage: React.FC = () => {
   const [agree, setAgree] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [maxPoints, setMaxPoints] = useState(0);
+  const [discount, setDiscount] = useState<'none' | 'youth' | 'military'>('none');
 
   const cardCompanies = ["선택", "KB국민카드", "신한카드", "삼성카드", "현대카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
 
@@ -115,6 +123,14 @@ const PaymentPage: React.FC = () => {
 
     const totalPrice = reservations.reduce((sum, r) => sum + r.finalPrice, 0);
 
+    // 할인 코드 계산
+    const hasYouthOrMilitary = discount === 'youth' || discount === 'military';
+    const hasEarlyOrLate = isEarlyOrLateShow;
+    let discountCode: "A" | "B" | "C" | undefined = undefined;
+    if (hasYouthOrMilitary && hasEarlyOrLate) discountCode = "C";
+    else if (hasYouthOrMilitary) discountCode = "A";
+    else if (hasEarlyOrLate) discountCode = "B";
+console.log(getDiscountAmount(), discountCode);
     try {
       setIsPaymentProcessing(true);
 
@@ -126,6 +142,8 @@ const PaymentPage: React.FC = () => {
           amount: totalPrice,
           cardOrAccountNumber: method === '카드' ? cardNumber : '110-1234-5678',
           deductedPoints: usedPoints,
+          discountAmount: getDiscountAmount(),
+          discountCode,
         },
         {
           headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
@@ -171,15 +189,60 @@ const PaymentPage: React.FC = () => {
 
   const isloggedin = localStorage.getItem('accessToken') !== null;
 
+  // 조조/심야 할인 여부 판별 함수
+  const isEarlyOrLateShow = (() => {
+    if (!mainReservation?.screeningStartTime) return false;
+    const date = new Date(mainReservation.screeningStartTime);
+    const hour = date.getHours();
+    return (hour >= 22 || hour < 10);
+  })();
+
+  // 할인 금액 계산 함수
+  const getDiscountAmount = () => {
+    let discountAmount = 0;
+    const seatCount = reservations.length;
+    if (discount === 'youth') discountAmount += 2000 * seatCount;
+    if (discount === 'military') discountAmount += 2000 * seatCount;
+    if (isEarlyOrLateShow) discountAmount += 3000 * seatCount;
+    return discountAmount;
+  };
+
+  // 결제금액 계산
+  const discountedPrice = Math.max(0, totalPrice - usedPoints - getDiscountAmount());
+
   return (
     <Wrapper>
       <Title>결제 정보 확인</Title>
       <Card>
+        <p><strong>예매번호:</strong> {reservations.map(r => r.id).join(', ')}</p>
         <p><strong>영화:</strong> {mainReservation.movieTitle}</p>
         <p><strong>일시:</strong> {mainReservation.screeningDate} {time}</p>
         <p><strong>극장:</strong> {mainReservation.cinemaName} / {mainReservation.screenName}</p>
         <p><strong>좌석:</strong> {reservationDetails?.seatLabels?.join(', ') || reservations.map(r => r.seatLabel).join(', ')}</p>
         <p><strong>총 금액:</strong> {totalPrice.toLocaleString()}원</p>
+        <Label>할인 선택</Label>
+        <DiscountButtonGroup>
+          <DiscountButton
+            type="button"
+            selected={discount === 'none'}
+            onClick={() => setDiscount('none')}
+          >할인 없음</DiscountButton>
+          <DiscountButton
+            type="button"
+            selected={discount === 'youth'}
+            onClick={() => setDiscount('youth')}
+          >청소년 할인</DiscountButton>
+          <DiscountButton
+            type="button"
+            selected={discount === 'military'}
+            onClick={() => setDiscount('military')}
+          >군인 할인</DiscountButton>
+        </DiscountButtonGroup>
+        <p><strong>포인트 사용:</strong> {usedPoints.toLocaleString()}P</p>
+        <p><strong>할인액:</strong> {getDiscountAmount().toLocaleString()}원
+          {isEarlyOrLateShow && <span style={{color:'#e57373',marginLeft:'0.5rem',fontSize:'0.97em'}}>(조조/심야 할인 포함)</span>}
+        </p>
+        <p><strong>총 결제금액:</strong> {discountedPrice.toLocaleString()}원</p>
       </Card>
 
       <Label>결제 수단 선택</Label>
@@ -275,6 +338,7 @@ const Card = styled.div`
 
 const Label = styled.h4`
   margin-bottom: 0.5rem;
+  margin-top: 1.2rem;
 `;
 
 const RadioGroup = styled.div`
@@ -345,15 +409,13 @@ const CheckboxRow = styled.div`
 `;
 
 const PaymentBtn = styled.button`
-  width: 100%;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: bold;
   background: ${({ theme }) => theme.primary};
   color: white;
   border: none;
-  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: bold;
 `;
 
 const NoticeBox = styled.div`
@@ -373,5 +435,26 @@ const NoticeBox = styled.div`
       color: #0f172a;
     }
   }
+`;
+
+const DiscountButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+`;
+
+const DiscountButton = styled.button<{ selected: boolean }>`
+  flex: 1;
+  padding: 0.6rem 0;
+  border-radius: 16px;
+  border: none;
+  background: ${({ selected, theme }) => selected ? theme.primary : '#222'};
+  color: ${({ selected }) => selected ? '#fff' : '#ccc'};
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  outline: none;
 `;
 

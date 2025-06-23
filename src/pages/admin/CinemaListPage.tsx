@@ -12,6 +12,20 @@ interface Cinema {
   screenCount: number;
 }
 
+// 지역 코드/이름 매핑 상수 추가
+const REGION_OPTIONS = [
+  { code: '01', name: '서울' },
+  { code: '02', name: '경기' },
+  { code: '03', name: '부산' },
+  { code: '04', name: '대구' },
+  { code: '05', name: '인천' },
+  { code: '06', name: '광주' },
+  { code: '07', name: '대전' },
+  { code: '08', name: '울산' },
+  { code: '09', name: '강원' },
+  { code: '10', name: '충북' },
+];
+
 const CinemaListPage: React.FC = () => {
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -170,12 +184,17 @@ const CinemaListPage: React.FC = () => {
                 />
               </FormGroup>
               <FormGroup>
-                <label>지역 코드</label>
-                <input 
-                  value={form.regionId || ''} 
-                  onChange={e => setForm(f => ({ ...f, regionId: e.target.value }))} 
-                  placeholder="지역 코드를 입력하세요 (01: 서울, 02: 대구)"
-                />
+                <label>지역</label>
+                <select
+                  value={form.regionId || ''}
+                  onChange={e => setForm(f => ({ ...f, regionId: e.target.value }))}
+                  required
+                >
+                  <option value="" disabled>지역을 선택하세요</option>
+                  {REGION_OPTIONS.map(opt => (
+                    <option key={opt.code} value={opt.code}>{opt.name}</option>
+                  ))}
+                </select>
               </FormGroup>
               <ModalButtonGroup>
                 <SubmitButton type="submit">저장</SubmitButton>

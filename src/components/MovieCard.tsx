@@ -9,7 +9,7 @@ type Props = {
 
 const MovieCard: React.FC<Props> = ({ movie }) => {
   const navigate = useNavigate();
-  const isDisabled = movie.screeningStatus === 'U' || movie.screeningStatus === 'E';
+  const isDisabled = movie.screeningStatus === 'N' || movie.screeningStatus === 'D';
 
   // 날짜 형식을 YYYY-MM-DD로 변환하는 함수
   const formatDate = (dateString: string) => {

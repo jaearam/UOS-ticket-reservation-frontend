@@ -215,7 +215,6 @@ const SeatListPage: React.FC = () => {
                 <th>행</th>
                 <th>열</th>
                 <th>상영관ID</th>
-                <th>상영관명</th>
                 <th>좌석등급</th>
                 <th>가격</th>
                 <th>관리</th>
@@ -229,7 +228,6 @@ const SeatListPage: React.FC = () => {
                   <td>{seat.row}</td>
                   <td>{seat.column}</td>
                   <td>{seat.screenId}</td>
-                  <td>{seat.screenName}</td>
                   <td><GradeBadge>{seat.seatGradeName}</GradeBadge></td>
                   <td><PriceText>{seat.price.toLocaleString()}원</PriceText></td>
                   <td>

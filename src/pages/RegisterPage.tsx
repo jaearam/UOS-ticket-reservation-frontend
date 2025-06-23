@@ -14,14 +14,31 @@ const RegisterPage: React.FC = () => {
 
   const [errorMsg, setErrorMsg] = useState('');
   const [idCheckMessage, setIdCheckMessage] = useState('');
+  const [displayPhone, setDisplayPhone] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (e.target.name === 'password' && e.target.value.length >= 8) {
+    const { name, value } = e.target;
+    if (name === 'phoneNumber') {
+      // 숫자만 추출
+      const onlyNumber = value.replace(/[^0-9]/g, '');
+      // 010-1234-5678 형식으로 포맷팅
+      let formatted = onlyNumber;
+      if (onlyNumber.length > 3 && onlyNumber.length <= 7) {
+        formatted = onlyNumber.slice(0, 3) + '-' + onlyNumber.slice(3);
+      } else if (onlyNumber.length > 7) {
+        formatted = onlyNumber.slice(0, 3) + '-' + onlyNumber.slice(3, 7) + '-' + onlyNumber.slice(7, 11);
+      }
+      setForm({ ...form, phoneNumber: onlyNumber });
+      // 입력창에는 formatted를 보여주기 위해 별도 상태 사용
+      setDisplayPhone(formatted);
+      return;
+    }
+    setForm({ ...form, [name]: value });
+    if (name === 'password' && value.length >= 8) {
       setErrorMsg('');
     }
-    if (e.target.name === 'userId') {
+    if (name === 'userId') {
       setIdCheckMessage('');
     }
   };
@@ -82,7 +99,7 @@ const RegisterPage: React.FC = () => {
         <Input type="email" name="email" value={form.email} onChange={handleChange} required />
 
         <label>전화번호 (숫자만, 11자리)</label>
-        <Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} required />
+        <Input name="phoneNumber" value={displayPhone} onChange={handleChange} required />
 
         <label>생년월일 (YYYYMMDD)</label>
         <Input name="birthDate" value={form.birthDate} onChange={handleChange} required />

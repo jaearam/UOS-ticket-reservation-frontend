@@ -30,11 +30,19 @@ function getViewingGradeText(grade: string) {
   return grade;
 }
 
+// 상영상태 텍스트 변환 함수
+function getScreeningStatusText(status: string) {
+  if (status === 'N') return '상영 예정';
+  if (status === 'D') return '상영중';
+  if (status === 'Y') return '상영 종료';
+  return status;
+}
+
 const MovieListPage: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<Partial<Movie>>({ status: 'D' });
+  const [form, setForm] = useState<Partial<Movie>>({ status: 'N' });
   const [editId, setEditId] = useState<number | null>(null);
 
   // 영화 목록 불러오기
@@ -100,7 +108,7 @@ const MovieListPage: React.FC = () => {
         alert('영화가 등록되었습니다.');
       }
       setShowModal(false);
-      setForm({ status: 'D' });
+      setForm({ status: 'N' });
       setEditId(null);
       fetchMovies();
     } catch (e: any) {
@@ -132,7 +140,7 @@ const MovieListPage: React.FC = () => {
       ...movie, 
       releaseDate: formattedDate,
       viewingGrade: movie.viewingGrade,
-      status: movie.status || 'D',
+      status: movie.status || 'N',
     });
     setEditId(movie.id);
     setShowModal(true);
@@ -141,7 +149,7 @@ const MovieListPage: React.FC = () => {
   // 모달 닫기
   const handleCloseModal = () => {
     setShowModal(false);
-    setForm({ status: 'D' });
+    setForm({ status: 'N' });
     setEditId(null);
   };
 
@@ -149,7 +157,7 @@ const MovieListPage: React.FC = () => {
     <Container>
       <h2>영화 관리</h2>
       
-      <Button onClick={() => { setShowModal(true); setForm({ status: 'D' }); setEditId(null); }}>+ 영화 등록</Button>
+      <Button onClick={() => { setShowModal(true); setForm({ status: 'N' }); setEditId(null); }}>+ 영화 등록</Button>
       
       {isLoading ? (
         <LoadingText>로딩 중...</LoadingText>
@@ -268,10 +276,10 @@ const MovieListPage: React.FC = () => {
               </FormGroup>
               <FormGroup>
                 <label>상영상태</label>
-                <select value={form.status || 'D'} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} required>
+                <select value={form.status || 'N'} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} required>
+                  <option value="N">상영 예정</option>
                   <option value="D">상영중</option>
-                  <option value="U">상영예정</option>
-                  <option value="E">상영종료</option>
+                  <option value="Y">상영 종료</option>
                 </select>
               </FormGroup>
               <FormGroup>
