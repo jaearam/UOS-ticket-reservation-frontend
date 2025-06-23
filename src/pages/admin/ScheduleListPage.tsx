@@ -111,8 +111,9 @@ const ScheduleListPage: React.FC = () => {
     const submissionData = {
       movieId: form.movieId,
       screenId: form.screenId,
-      startTime: `${form.date}T${form.startTime}:00`,
-      endTime: form.endTime ? `${form.date}T${form.endTime}:00` : undefined,
+      screeningDate: form.date?.replace(/-/g, ''), // 'YYYY-MM-DD' -> 'YYYYMMDD'
+      screeningStartTime: form.startTime?.replace(':', ''), // 'HH:mm' -> 'HHmm'
+      screeningEndTime: form.endTime?.replace(':', '') || undefined, // 'HH:mm' -> 'HHmm' 또는 미전송
     };
 
     try {

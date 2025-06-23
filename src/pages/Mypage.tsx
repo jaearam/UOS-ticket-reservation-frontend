@@ -30,12 +30,14 @@ const TicketModal = ({ open, onClose, reservation }: { open: boolean; onClose: (
       <ModalContent>
         <TicketCard>
           <h2>🎟️ 티켓 발급 완료</h2>
-          <InfoRow><strong>예매번호</strong> {reservation.id}</InfoRow>
-          <InfoRow><strong>영화</strong> {reservation.movieTitle}</InfoRow>
-          <InfoRow><strong>일시</strong> {date} {time.slice(0, 5)}</InfoRow>
-          <InfoRow><strong>극장</strong> {reservation.cinemaName} / {reservation.screenName}</InfoRow>
-          <InfoRow><strong>좌석</strong> {reservation.seatLabel}</InfoRow>
-          <InfoRow><strong>결제금액</strong> {reservation.finalPrice.toLocaleString()}원</InfoRow>
+          <InfoGrid>
+            <InfoRow><strong>예매번호</strong><span>{reservation.id}</span></InfoRow>
+            <InfoRow><strong>영화</strong><span>{reservation.movieTitle}</span></InfoRow>
+            <InfoRow><strong>일시</strong><span>{date} {time.slice(0, 5)}</span></InfoRow>
+            <InfoRow><strong>극장</strong><span>{reservation.cinemaName} / {reservation.screenName}</span></InfoRow>
+            <InfoRow><strong>좌석</strong><span>{reservation.seatLabel}</span></InfoRow>
+            <InfoRow><strong>결제금액</strong><span>{reservation.finalPrice.toLocaleString()}원</span></InfoRow>
+          </InfoGrid>
           <CloseBtn onClick={onClose}>닫기</CloseBtn>
         </TicketCard>
       </ModalContent>
@@ -457,54 +459,62 @@ const ModalContent = styled.div`
   background: none;
   border: none;
   box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 const TicketCard = styled.div`
-  background: #181818;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px 0 rgba(229,9,20,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.18);
-  padding: 2.5rem 2.2rem 2rem 2.2rem;
-  min-width: 340px;
-  max-width: 95vw;
-  color: #fff;
-  border: 2.5px solid #e50914;
-  position: relative;
+  background: ${({ theme }) => theme.surface};
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  padding: 2.5rem;
+  width: 90%;
+  min-width: 360px;
+  max-width: 420px;
+  color: ${({ theme }) => theme.text};
+  border: 1px solid #333;
   text-align: left;
+  
   h2 {
-    color: #e50914;
-    margin-bottom: 1.5rem;
+    color: ${({ theme }) => theme.primary};
+    margin: 0 0 1.5rem 0;
     text-align: center;
-    font-size: 1.3rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-  }
-`;
-const InfoRow = styled.div`
-  margin-bottom: 1.1rem;
-  font-size: 1.08rem;
-  strong {
-    color: #e50914;
-    margin-right: 0.7rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    min-width: 90px;
-    display: inline-block;
   }
 `;
-const CloseBtn = styled.button`
-  display: block;
-  margin: 2.2rem auto 0 auto;
-  background: #e50914;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.7rem 2.2rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(229,9,20,0.12);
-  transition: background 0.18s;
-  &:hover {
-    background: #b0060f;
+
+const InfoGrid = styled.div`
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+
+  strong {
+    color: #aaa;
+    font-weight: 500;
   }
+
+  span {
+    font-weight: 500;
+    text-align: right;
+  }
+`;
+
+const CloseBtn = styled(MainBtn)`
+  display: block;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0.9rem;
 `;
 
 const TransferModalOverlay = styled(ModalOverlay)``;

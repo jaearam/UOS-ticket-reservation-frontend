@@ -21,6 +21,14 @@ const PaymentPage: React.FC = () => {
 
   const cardCompanies = ["선택", "KB국민카드", "신한카드", "삼성카드", "현대카드", "롯데카드", "우리카드", "하나카드", "BC카드", "NH농협카드"];
 
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+    const formattedValue = rawValue
+      .slice(0, 16)
+      .replace(/(\d{4})(?=\d)/g, '$1-');
+    setCardNumber(formattedValue);
+  };
+
   useEffect(() => {
     if (!reservationIds || reservationIds.length === 0) {
       // 새로고침 등으로 ID 목록이 없을 경우 단일 ID로 조회 시도
@@ -93,6 +101,15 @@ const PaymentPage: React.FC = () => {
     if (!agree) return alert('약관에 동의해주세요.');
     if (reservations.length === 0) return;
 
+    const idsToPay = reservationIds && reservationIds.length > 0
+      ? reservationIds
+      : reservations.map(r => r.id);
+
+    if (idsToPay.length === 0) {
+      alert('결제할 예매 항목이 없습니다.');
+      return;
+    }
+
     const accessToken = localStorage.getItem('accessToken');
     const isLoggedIn = !!accessToken;
 
@@ -104,7 +121,7 @@ const PaymentPage: React.FC = () => {
       await axios.post(
         'http://localhost:8080/api/reservations/payment',
         {
-          reservationIds,
+          reservationIds: idsToPay,
           paymentMethod: method,
           amount: totalPrice,
           cardOrAccountNumber: method === '카드' ? cardNumber : '110-1234-5678',
@@ -187,7 +204,8 @@ const PaymentPage: React.FC = () => {
               type="text"
               placeholder="1234-5678-9012-3456"
               value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
+              onChange={handleCardNumberChange}
+              maxLength={19}
             />
           </InputGroup>
         </>
@@ -295,18 +313,19 @@ const InputGroup = styled.div`
 
   input {
     width: 100%;
-    max-width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    border: none;
-    background-color: #f3f4f6;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: ${({ theme }) => theme.surface};
+    color: ${({ theme }) => theme.text};
     font-size: 1rem;
-    color: #111;
+    box-sizing: border-box;
     outline: none;
-    box-sizing: border-box; // ✅ padding 포함한 width로 계산
-    background-color: #1f2937; // dark-gray
-    color: #f9fafb;            // near-white
+    transition: border-color 0.2s;
 
+    &:focus {
+      border-color: ${({ theme }) => theme.primary};
+    }
   }
 
   span {

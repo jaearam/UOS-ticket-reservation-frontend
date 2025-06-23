@@ -14,6 +14,7 @@ const EditProfilePage: React.FC = () => {
     birthDate: '',
     password: '',
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -37,8 +38,19 @@ const EditProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 비밀번호 필드가 채워져 있을 때만 유효성 검사
+    if (form.password && form.password !== confirmPassword) {
+      setErrorMsg('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    // 비밀번호를 변경하지 않는 경우, password 필드를 보내지 않음
+    const { password, ...restOfForm } = form;
+    const submissionData = form.password ? form : restOfForm;
+
     try {
-      await axios.put('http://localhost:8080/api/members/my', form, {
+      await axios.put('http://localhost:8080/api/members/my', submissionData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('회원 정보가 수정되었습니다.');
@@ -61,13 +73,20 @@ const EditProfilePage: React.FC = () => {
         <label>생년월일 (YYYYMMDD)</label>
         <Input name="birthDate" value={form.birthDate} onChange={handleChange} required />
 
-        <label>새 비밀번호</label>
+        <label>새 비밀번호 (변경 시에만 입력)</label>
         <Input
           type="password"
           name="password"
           value={form.password}
           onChange={handleChange}
-          required
+        />
+        
+        <label>새 비밀번호 확인</label>
+        <Input
+          type="password"
+          name="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
 
         {errorMsg && <ErrorMsg>{errorMsg}</ErrorMsg>}

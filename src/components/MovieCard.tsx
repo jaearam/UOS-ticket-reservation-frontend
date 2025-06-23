@@ -10,13 +10,24 @@ type Props = {
 const MovieCard: React.FC<Props> = ({ movie }) => {
   const navigate = useNavigate();
   const isDisabled = movie.screeningStatus === 'U' || movie.screeningStatus === 'E';
+
+  // 날짜 형식을 YYYY-MM-DD로 변환하는 함수
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    // YYYYMMDD 형식을 YYYY-MM-DD로 변환
+    if (dateString.length === 8) {
+      return `${dateString.slice(0, 4)}-${dateString.slice(4, 6)}-${dateString.slice(6, 8)}`;
+    }
+    return dateString;
+  };
+
   return (
     <Card>
       <Poster src={movie.image} alt={movie.title} />
       <Overlay>
         <Title>{movie.title}</Title>
         <Genre>{movie.genre}</Genre>
-        <Release>{movie.releaseDate}</Release>
+        <Release>{formatDate(movie.releaseDate)}</Release>
         <ReserveBtn
           disabled={isDisabled}
           onClick={() => {
@@ -69,11 +80,22 @@ const Overlay = styled.div`
   transition: all 0.3s ease;
   opacity: 0;
   transform: translateY(100%);
+  box-sizing: border-box;
 `;
 
 const Title = styled.h4`
-  margin: 0;
-  font-size: 1rem;
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  /* height: 2.8em; /* line-height * 2줄 */ */
+
+  /* 2줄 이상일 경우 말줄임표 처리 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 `;
 
 const Genre = styled.p`

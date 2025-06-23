@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { banners } from '../data/banners';
 
 const HeroBanner: React.FC = () => {
   const [index, setIndex] = useState(0);
 
-  const next = () => {
+  const next = useCallback(() => {
     setIndex((prev) => (prev + 1) % banners.length);
-  };
+  }, []);
 
   const prev = () => {
     setIndex((prev) => (prev - 1 + banners.length) % banners.length);
   };
+
+  useEffect(() => {
+    const interval = setInterval(next, 3000); // 3초마다 next 함수 호출
+    return () => clearInterval(interval); // 컴포넌트 언마운트 시 인터벌 정리
+  }, [next]);
 
   return (
     <BannerWrapper>
