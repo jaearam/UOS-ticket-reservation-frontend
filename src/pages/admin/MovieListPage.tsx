@@ -278,8 +278,8 @@ const MovieListPage: React.FC = () => {
                 <label>상영상태</label>
                 <select value={form.status || 'N'} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} required>
                   <option value="N">상영 예정</option>
-                  <option value="D">상영중</option>
-                  <option value="Y">상영 종료</option>
+                  <option value="Y">상영중</option>
+                  <option value="D">상영 종료</option>
                 </select>
               </FormGroup>
               <FormGroup>

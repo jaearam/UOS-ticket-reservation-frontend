@@ -3,6 +3,21 @@ import styled from 'styled-components';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// 전화번호 포맷팅 유틸리티 함수들
+const formatPhoneNumber = (value: string): string => {
+  // 숫자만 추출
+  const numbers = value.replace(/[^\d]/g, '');
+  
+  // 길이에 따라 하이픈 추가
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+  return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+};
+
+const removeHyphens = (value: string): string => {
+  return value.replace(/-/g, '');
+};
+
 const GuestLookupPage: React.FC = () => {
   const [reservationId, setReservationId] = useState('');
   const [phone, setPhone] = useState('');
@@ -10,6 +25,13 @@ const GuestLookupPage: React.FC = () => {
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [issuedReservation, setIssuedReservation] = useState<any | null>(null);
   const navigate = useNavigate();
+
+  // 전화번호 입력 핸들러
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formattedValue = formatPhoneNumber(value);
+    setPhone(formattedValue);
+  };
 
   // 취소 요청 처리
   const handleCancel = async () => {
@@ -41,7 +63,7 @@ const GuestLookupPage: React.FC = () => {
       const res = await axios.get('http://localhost:8080/api/reservations/non-member/check', {
         params: {
           reservationId: Number(reservationId),
-          phoneNumber: phone
+          phoneNumber: removeHyphens(phone) // 하이픈 제거하여 서버로 전송
         }
       });
 
@@ -83,7 +105,7 @@ const GuestLookupPage: React.FC = () => {
         <Input
           id="phone"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={handlePhoneChange}
           placeholder="010-1234-5678"
         />
         <Btn type="submit">예매 내역 조회</Btn>
