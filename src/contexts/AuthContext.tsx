@@ -68,8 +68,8 @@ const login = async (accessToken: string) => {
     } finally {
       setToken(null);
       setUser(null); // 사용자 정보도 초기화
-      localStorage.removeItem('accessToken');
-      sessionStorage.removeItem('accessToken');
+      localStorage.clear();
+      sessionStorage.clear();
     }
   };
 

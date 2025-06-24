@@ -140,7 +140,6 @@ const ReservationListPage: React.FC = () => {
                 <th>예매시간</th>
                 <th>예매상태</th>
                 <th>결제상태</th>
-                <th>관리</th>
               </tr>
             </thead>
             <tbody>
@@ -161,22 +160,6 @@ const ReservationListPage: React.FC = () => {
                     <td>{formatReservationTime(rsv.reservationTime)}</td>
                     <td>{rsv.statusText || rsv.status || '-'}</td>
                     <td>{rsv.paymentStatus || '미결제'}</td>
-                    <td>
-                      <CancelButton onClick={async () => {
-                        if (!window.confirm('이 예매를 취소하시겠습니까?')) return;
-                        const accessToken = localStorage.getItem('accessToken');
-                        const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-                        try {
-                          await axios.delete(`http://localhost:8080/api/reservations/${rsv.id}`, { headers });
-                          alert('예매가 취소되었습니다.');
-                          fetchUnpaidReservations();
-                        } catch (e) {
-                          alert('예매 취소에 실패했습니다.');
-                        }
-                      }}>
-                        개별 취소
-                      </CancelButton>
-                    </td>
                   </tr>
                 ))
               )}

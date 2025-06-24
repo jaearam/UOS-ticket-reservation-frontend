@@ -95,11 +95,15 @@ const handleReserve = async () => {
     phoneNumber: isLoggedIn ? undefined : phoneNumber,
   };
 
+  // 요청 전 payload 로그
+  console.log('예매 요청 payload:', payload);
+
   try {
     const response = await axios.post('http://localhost:8080/api/reservations/create', payload, {
       headers: isLoggedIn ? { Authorization: `Bearer ${accessToken}` } : {},
     });
 
+    // 응답 로그
     console.log('--- 예매 생성 API 응답 데이터 --- :', response.data);
 
     const reservationIds = response.data.reservationIds;

@@ -332,7 +332,7 @@ const Mypage: React.FC = () => {
         ) : (
           pointHistory.map((p) => (
           <Card key={p.id}>
-            <p><strong>일시:</strong> {new Date(p.pointTime).toLocaleString()}</p>
+            <p><strong>일시:</strong> {new Date(p.createdAt).toLocaleString()}</p>
             <p><strong>내역:</strong> {p.typeText}</p>
             <p>
               <strong>금액:</strong>{' '}
